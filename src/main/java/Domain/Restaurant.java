@@ -16,7 +16,7 @@ public class Restaurant {
     private boolean status; //true>> open
 
     public Restaurant(String name,String district,Menu menu){
-        id="R-"+Integer.toString(nextId++);
+        id="RS-"+Integer.toString(nextId++);
         this.name=name;
         this .district=district;
         this.menu=menu;
