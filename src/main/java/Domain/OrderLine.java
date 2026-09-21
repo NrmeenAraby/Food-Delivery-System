@@ -2,13 +2,24 @@ package Domain;
 
 import java.math.BigDecimal;
 
-public record OrderLine(MenuItem item, BigDecimal quantity) {
-    public OrderLine{
-        if(item==null){
-            throw  new IllegalArgumentException("Item cant be null");
-        }
-        if(quantity==null || quantity.compareTo(BigDecimal.ZERO)<=0){
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
+public class OrderLine {
+    private MenuItem menuItem;
+    private BigDecimal quantity;
+
+    public OrderLine(MenuItem menuItem, BigDecimal quantity) {
+        this.menuItem = menuItem;
+        this.quantity=quantity;
     }
+
+    public MenuItem getMenuItem() {
+        return menuItem;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+    public BigDecimal calculateSubTotal(){
+        return menuItem.calculateItemPrice().multiply(quantity);
+    }
+
 }

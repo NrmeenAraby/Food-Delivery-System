@@ -29,8 +29,8 @@ public class Order {
     public void addLineItem(MenuItem item, BigDecimal quantity){
         for(int idx=0;idx<lineItems.size();idx++){
             OrderLine line=lineItems.get(idx);
-            if(line.item().equals(item)){
-                BigDecimal newQuantity=line.quantity().add(quantity);
+            if(line.getMenuItem().equals(item)){
+                BigDecimal newQuantity=line.getQuantity().add(quantity);
                 lineItems.set(idx,new OrderLine(item,newQuantity));
                 return;
             }
