@@ -1,5 +1,7 @@
 package Domain;
 
+import Exceptions.InsufficientWalletException;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ public class Customer {
         this.name = name;
         addresses=new ArrayList<>();
         setPhoneNumber(phoneNumber);
-        this.walletBalance = walletBalance;
+        setWalletBalance(walletBalance);
         completedOrderCount=0;
     }
     public void setPhoneNumber(String phoneNumber){
@@ -30,6 +32,12 @@ public class Customer {
         else{
             throw new IllegalArgumentException( "Invalid Egyptian mobile number");
         }
+    }
+
+    public void setWalletBalance(BigDecimal walletBalance) {
+        if(walletBalance==null ||walletBalance.compareTo(BigDecimal.ZERO)<=0)
+            throw new InsufficientWalletException("Invalid wallet balance");
+        this.walletBalance = walletBalance;
     }
 
     public void addAddress(Address address){
@@ -82,5 +90,20 @@ public class Customer {
         else {
             return LoyaltyTier.Bronze;
         }
+    }
+    public void addMoney(BigDecimal amount){
+        if(amount.compareTo(BigDecimal.ZERO)<=0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+        walletBalance=walletBalance.add(amount);
+    }
+    public void deductMoney(BigDecimal amount){
+        if(amount.compareTo(BigDecimal.ZERO)<=0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+        if(walletBalance.compareTo(amount)<=0){
+            throw new InsufficientWalletException("Insufficient wallet balance");
+        }
+        walletBalance=walletBalance.subtract(amount);
     }
 }
