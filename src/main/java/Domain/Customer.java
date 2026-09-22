@@ -3,7 +3,9 @@ package Domain;
 import Exceptions.InsufficientWalletException;
 
 import java.math.BigDecimal;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class Customer {
@@ -16,7 +18,7 @@ public class Customer {
     private int completedOrderCount;
     private static final int SILVER_TIER_ORDERS =10;
     private static final int GOLD_TIER_ORDERS =30;
-
+    private Deque<SearchCriteria> lastSearches;
     public Customer(String name, String phoneNumber, BigDecimal walletBalance) {
         id="C-"+Integer.toString(nextId++);
         this.name = name;
@@ -24,6 +26,15 @@ public class Customer {
         setPhoneNumber(phoneNumber);
         setWalletBalance(walletBalance);
         completedOrderCount=0;
+    }
+    public void addSearch(SearchCriteria search){
+        if(lastSearches==null){
+            lastSearches=new ArrayDeque<>();
+        }
+        lastSearches.addFirst(search);
+        if(lastSearches.size()>5) {
+            lastSearches.removeLast();
+        }
     }
     public void setPhoneNumber(String phoneNumber){
         if(isValidEgyptianPhone(phoneNumber)){
@@ -105,4 +116,6 @@ public class Customer {
     public boolean isFirstTimeCustomer(){
         return completedOrderCount==0;
     }
+
+
 }

@@ -30,6 +30,12 @@ public class Order {
         orderStatus=OrderStatus.PLACED;
         this.promotion=promotion;
     }
+
+    public String getId() {
+        return id;
+    }
+
+
     public void applyPromotion(Promotion promotion) {
         if (this.promotion != null) {
             throw new IllegalPromotion("An order can have at most one promotion");
@@ -105,7 +111,7 @@ public class Order {
         return promotion;
     }
 
-    public BigDecimal calculateTotal(BigDecimal distanceKm){
+    public OrderPrice calculatePrice(BigDecimal distanceKm){
         BigDecimal subTotal=BigDecimal.ZERO;
         for(var lineItem:lineItems){
             subTotal=subTotal.add(lineItem.calculateOrderLine());
@@ -126,7 +132,10 @@ public class Order {
             promotionDiscount = promotion.getPromotionStrategy()
                     .calculatePromotionDiscount(subTotal, deliveryFee);
         }
-        return subTotal.add(deliveryFee).add(serviceFee).subtract(promotionDiscount);
+        BigDecimal total= subTotal.add(deliveryFee).add(serviceFee).subtract(promotionDiscount);
+        total=total.max(BigDecimal.ZERO);
+        OrderPrice orderPrice=new OrderPrice(subTotal,deliveryFee,serviceFee,promotionDiscount,total);
+        return orderPrice;
     }
     private BigDecimal calculateDeliveryFee(BigDecimal distanceKm){
         BigDecimal deliveryFee=PlatformConfig.getInstance().getBaseDeliveryFee();

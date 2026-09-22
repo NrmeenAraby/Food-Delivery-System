@@ -4,15 +4,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Restaurant {
-
     private static int nextId = 1;
     private final String id;
     private String name;
     private  String district;
-    private Set<CuisineCategory> cuisineCategories;
+    private final Set<CuisineCategory> cuisineCategories;
     private double totalRating;
     private int ratingCount;
-    private Menu menu;
+    private final Menu menu;
     private boolean status; //true>> open
 
     public Restaurant(String name,String district,Menu menu){
@@ -72,5 +71,6 @@ public class Restaurant {
     public void updateRestaurantStatus(boolean status){
         this.status=status;
     }
+
 
 }

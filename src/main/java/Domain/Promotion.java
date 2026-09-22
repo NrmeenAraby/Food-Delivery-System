@@ -28,6 +28,26 @@ public class Promotion {
         this.promotionStrategy=promotionStrategy;
     }
 
+    public String getCode() {
+        return code;
+    }
+
+    public BigDecimal getMinimumSubTotal() {
+        return minimumSubTotal;
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+
+    public String getRestrictedDistrict() {
+        return restrictedDistrict;
+    }
+
+    public boolean isFirstTimeCustomersRestriction() {
+        return firstTimeCustomersRestriction;
+    }
+
     public void isApplicable(BigDecimal subTotal, boolean firstTimeCustomer, String targetedDistrict){
         if(subTotal.compareTo(minimumSubTotal)<0) {
             throw new IllegalPromotion("The subtotal less than minimum subtotal needed to apply this promotion");
