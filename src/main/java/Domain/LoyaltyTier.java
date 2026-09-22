@@ -10,4 +10,9 @@ public enum LoyaltyTier {
     LoyaltyTier(BigDecimal discount){
         this.discount=discount;
     }
+
+    public BigDecimal getDeliveryDiscount() {
+        return discount;
+    }
+
 }

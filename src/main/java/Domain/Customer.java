@@ -46,10 +46,6 @@ public class Customer {
     public void removeAddress(Address address){
         addresses.removeIf(a->a.equals(address));
     }
-    public static int getNextId() {
-        return nextId;
-    }
-
     public String getId() {
         return id;
     }
@@ -105,5 +101,8 @@ public class Customer {
             throw new InsufficientWalletException("Insufficient wallet balance");
         }
         walletBalance=walletBalance.subtract(amount);
+    }
+    public boolean isFirstTimeCustomer(){
+        return completedOrderCount==0;
     }
 }

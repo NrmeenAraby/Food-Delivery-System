@@ -18,7 +18,7 @@ public class OrderLine {
     public BigDecimal getQuantity() {
         return quantity;
     }
-    public BigDecimal calculateSubTotal(){
+    public BigDecimal calculateOrderLine(){
         return menuItem.calculateItemPrice().multiply(quantity);
     }
 

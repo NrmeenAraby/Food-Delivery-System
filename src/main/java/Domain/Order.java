@@ -1,8 +1,10 @@
 package Domain;
 
+import Exceptions.IllegalPromotion;
 import Exceptions.InvalidOrderTransition;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,21 +12,30 @@ import java.util.List;
 public class Order {
     private static int nextId = 1;
     private final String id;
-    private String customerId;
+    private Customer customer;
     private String restaurantId;
     private Address deliveryAddress;
     private List<OrderLine> lineItems;
     private final LocalDateTime placedAt;
     private OrderStatus orderStatus;
+    private Promotion promotion;
 
-    public Order(String customerId, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines) {
+    public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion) {
         id="O-"+Integer.toString(nextId++);
-        this.customerId = customerId;
+        this.customer = customer;
         this.restaurantId = restaurantId;
         this.deliveryAddress = deliveryAddress;
         lineItems=new ArrayList<>(orderLines);
         placedAt =LocalDateTime.now();
         orderStatus=OrderStatus.PLACED;
+        this.promotion=promotion;
+    }
+    public void applyPromotion(Promotion promotion) {
+        if (this.promotion != null) {
+            throw new IllegalPromotion("An order can have at most one promotion");
+        }
+
+        this.promotion = promotion;
     }
     public void addLineItem(MenuItem item, BigDecimal quantity){
         for(int idx=0;idx<lineItems.size();idx++){
@@ -66,8 +77,8 @@ public class Order {
         };
     }
 
-    public String getCustomerId() {
-        return customerId;
+    public Customer getCustomer() {
+        return customer;
     }
 
     public String getRestaurantId() {
@@ -89,4 +100,44 @@ public class Order {
     public OrderStatus getOrderStatus() {
         return orderStatus;
     }
+
+    public Promotion getPromotion() {
+        return promotion;
+    }
+
+    public BigDecimal calculateTotal(BigDecimal distanceKm){
+        BigDecimal subTotal=BigDecimal.ZERO;
+        for(var lineItem:lineItems){
+            subTotal=subTotal.add(lineItem.calculateOrderLine());
+        }
+
+        BigDecimal deliveryFee=calculateDeliveryFee(distanceKm);
+
+        BigDecimal serviceFee=subTotal
+                .multiply(PlatformConfig.getInstance().getServiceFeeRate())
+                .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal promotionDiscount =BigDecimal.ZERO;
+        if (promotion != null) {
+            promotion.isApplicable(subTotal,
+                    customer.isFirstTimeCustomer(),
+                    deliveryAddress.district());
+
+            promotionDiscount = promotion.getPromotionStrategy()
+                    .calculatePromotionDiscount(subTotal, deliveryFee);
+        }
+        return subTotal.add(deliveryFee).add(serviceFee).subtract(promotionDiscount);
+    }
+    private BigDecimal calculateDeliveryFee(BigDecimal distanceKm){
+        BigDecimal deliveryFee=PlatformConfig.getInstance().getBaseDeliveryFee();
+        BigDecimal remainingKms=distanceKm.subtract(BigDecimal.valueOf(3));
+        if(remainingKms.compareTo(BigDecimal.ZERO)>0) {
+            deliveryFee = deliveryFee.add(remainingKms.multiply(PlatformConfig.getInstance().getExtraKmFee()));
+        }
+        BigDecimal deliveryDiscount=customer.getLoyalityTier().getDeliveryDiscount();
+        deliveryFee=deliveryFee.subtract(deliveryFee.multiply(deliveryDiscount));
+
+        return deliveryFee;
+    }
+
 }
