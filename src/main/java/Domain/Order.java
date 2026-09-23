@@ -182,7 +182,7 @@ public class Order {
         if(remainingKms.compareTo(BigDecimal.ZERO)>0) {
             deliveryFee = deliveryFee.add(remainingKms.multiply(PlatformConfig.getInstance().getExtraKmFee()));
         }
-        BigDecimal deliveryDiscount=customer.getLoyalityTier().getDeliveryDiscount();
+        BigDecimal deliveryDiscount=customer.getLoyaltyTier().getDeliveryDiscount();
         deliveryFee=deliveryFee.subtract(deliveryFee.multiply(deliveryDiscount));
 
         return deliveryFee;

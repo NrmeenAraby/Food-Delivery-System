@@ -49,7 +49,7 @@ public class OrderBuilder {
         this.promotion = promotion;
         return this;
     }
-    public OrderBuilder setPromotion(BigDecimal distanceKm) {
+    public OrderBuilder setDistanceKm(BigDecimal distanceKm) {
         this.distanceKm = distanceKm;
         return this;
     }
@@ -58,7 +58,8 @@ public class OrderBuilder {
         if (customer == null
                 || restaurantId == null
                 || deliveryAddress == null
-                || lineItems.isEmpty()) {
+                || lineItems.isEmpty()
+                || distanceKm == null) {
             throw new IllegalStateException("Missing required order information");
         }
         return new Order(customer,restaurantId,deliveryAddress, lineItems,promotion,distanceKm);

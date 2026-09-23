@@ -44,7 +44,7 @@ public class Customer {
     }
 
     public void setWalletBalance(BigDecimal walletBalance) {
-        if(walletBalance==null ||walletBalance.compareTo(BigDecimal.ZERO)<=0)
+        if(walletBalance==null ||walletBalance.compareTo(BigDecimal.ZERO)<0)
             throw new InsufficientWalletException("Invalid wallet balance");
         this.walletBalance = walletBalance;
     }
@@ -85,7 +85,7 @@ public class Customer {
     public void incrementCompletedOrderCount(){
         completedOrderCount++;
     }
-    public LoyaltyTier getLoyalityTier(){
+    public LoyaltyTier getLoyaltyTier(){
         if(completedOrderCount>= GOLD_TIER_ORDERS){
             return LoyaltyTier.Gold;
         }

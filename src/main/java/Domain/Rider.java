@@ -52,6 +52,10 @@ public class Rider {
         return availabilityStatus;
     }
 
+    public Order getActiveOrder() {
+        return activeOrder;
+    }
+
     public int getCompletedDeliveriesCount() {
         return completedDeliveriesCount;
     }
@@ -75,9 +79,9 @@ public class Rider {
         }
         activeOrder=null;
         updateAvailabilityStatus(true);
-        incrementCompletedDeliveries();
     }
     public boolean canHandleOrder(Order order){
         return  isAvailable() && dispatchStrategy.canAssign(order);
     }
+
 }
