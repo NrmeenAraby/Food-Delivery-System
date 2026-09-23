@@ -1,11 +1,11 @@
 package Domain;
 
-import Exceptions.IllegalPromotion;
-import Exceptions.InvalidOrderTransition;
+import Exceptions.IllegalPromotionException;
+import Exceptions.InvalidOrderTransitionException;
+import OrderStatusObserver.EventPublisher;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +17,14 @@ public class Order {
     private String restaurantId;
     private Address deliveryAddress;
     private List<OrderLine> lineItems;
-    private final LocalDateTime placedAt;
+    private  LocalDateTime placedAt;
     private OrderStatus orderStatus;
     private Promotion promotion;
     private OrderPrice finalPrice;
     private String riderId;
     private LocalDateTime assignedAt;
     private LocalDateTime deliveredAt;
+    private EventPublisher eventPublisher;
 
     public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion) {
         id="O-"+Integer.toString(nextId++);
@@ -34,6 +35,11 @@ public class Order {
         placedAt =LocalDateTime.now();
         orderStatus=OrderStatus.PLACED;
         this.promotion=promotion;
+        this.eventPublisher=new EventPublisher();
+    }
+
+    public EventPublisher getEventPublisher() {
+        return eventPublisher;
     }
 
     public String getId() {
@@ -54,7 +60,7 @@ public class Order {
 
     public void applyPromotion(Promotion promotion) {
         if (this.promotion != null) {
-            throw new IllegalPromotion("An order can have at most one promotion");
+            throw new IllegalPromotionException("An order can have at most one promotion");
         }
 
         this.promotion = promotion;
@@ -72,9 +78,10 @@ public class Order {
     }
     public void changeStatus(OrderStatus newStatus){
         if(!isValidTransition(newStatus)){
-            throw new InvalidOrderTransition("Cannot change status from " + orderStatus + " to " + newStatus);
+            throw new InvalidOrderTransitionException("Cannot change status from " + orderStatus + " to " + newStatus);
         }
         this.orderStatus=newStatus;
+        eventPublisher.notifyListeners(this);
     }
     private boolean isValidTransition(OrderStatus newStatus){
         return switch (orderStatus){
@@ -150,13 +157,10 @@ public class Order {
         }
         BigDecimal total= subTotal.add(deliveryFee).add(serviceFee).subtract(promotionDiscount);
         total=total.max(BigDecimal.ZERO);
-        OrderPrice orderPrice=new OrderPrice(subTotal,deliveryFee,serviceFee,promotionDiscount,total);
-        return orderPrice;
+        this.finalPrice=new OrderPrice(subTotal,deliveryFee,serviceFee,promotionDiscount,total);
+        return finalPrice;
     }
 
-    public void setFinalPrice(OrderPrice price){
-        this.finalPrice=price;
-    }
     public OrderPrice getFinalPrice() {
         return finalPrice;
     }
@@ -173,7 +177,7 @@ public class Order {
         return deliveryFee;
     }
     public void assignRider(String riderId){
-        if(riderId!=null){
+        if(this.riderId!=null){
             throw new IllegalStateException("Order already assigned to a rider");
         }
         this.riderId = riderId;

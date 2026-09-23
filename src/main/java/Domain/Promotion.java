@@ -1,6 +1,6 @@
 package Domain;
 
-import Exceptions.IllegalPromotion;
+import Exceptions.IllegalPromotionException;
 import PromotionStrategies.PromotionStrategy;
 
 import java.math.BigDecimal;
@@ -50,16 +50,16 @@ public class Promotion {
 
     public void isApplicable(BigDecimal subTotal, boolean firstTimeCustomer, String targetedDistrict){
         if(subTotal.compareTo(minimumSubTotal)<0) {
-            throw new IllegalPromotion("The subtotal less than minimum subtotal needed to apply this promotion");
+            throw new IllegalPromotionException("The subtotal less than minimum subtotal needed to apply this promotion");
         }
         if (expiryDate.isBefore(LocalDate.now())){
-            throw new IllegalPromotion("This promotion is expired");
+            throw new IllegalPromotionException("This promotion is expired");
         }
         if(firstTimeCustomersRestriction && !firstTimeCustomer){
-            throw new IllegalPromotion("This promotion is first time customer restricted");
+            throw new IllegalPromotionException("This promotion is first time customer restricted");
         }
         if(restrictedDistrict !=null && !restrictedDistrict.equals(targetedDistrict)){
-            throw new IllegalPromotion("This promotion is restricted only to "+ restrictedDistrict);
+            throw new IllegalPromotionException("This promotion is restricted only to "+ restrictedDistrict);
         }
     }
 

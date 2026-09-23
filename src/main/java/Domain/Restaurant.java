@@ -2,9 +2,10 @@ package Domain;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Restaurant {
-    private static int nextId = 1;
+    private static AtomicInteger nextId = new AtomicInteger(1);
     private final String id;
     private String name;
     private  String district;
@@ -16,7 +17,7 @@ public class Restaurant {
     private int completedOrders;
 
     public Restaurant(String name,String district,Menu menu){
-        id="RS-"+Integer.toString(nextId++);
+        id="RS-"+nextId.getAndIncrement();
         this.name=name;
         this .district=district;
         this.menu=menu;
@@ -35,10 +36,6 @@ public class Restaurant {
 
     public int getCompletedOrders() {
         return completedOrders;
-    }
-
-    public static int getNextId() {
-        return nextId;
     }
 
     public String getId() {

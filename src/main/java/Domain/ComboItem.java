@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.Map;
 
 public class ComboItem extends MenuItem{
-    private Map<String, MenuItem> comboItems=new LinkedHashMap<>();
+    private final Map<String, MenuItem> comboItems=new LinkedHashMap<>();
     private BigDecimal discount;
 
-    public ComboItem(String name, ItemCategory itemCategory, int preparationTimeMinutes, BigDecimal discount) {
-        super(name,itemCategory, preparationTimeMinutes);
+    public ComboItem(String name, ItemCategory itemCategory, int preparationTimeMinutes,double stockQuantity, BigDecimal discount) {
+        super(name,itemCategory, preparationTimeMinutes,stockQuantity);
         this.discount=discount;
     }
 
     public void addItem(MenuItem item){
         if(item instanceof ComboItem) {
-            throw new InvalidComboItemException( "A combo cannot contain another combo");
+            throw new InvalidComboItemException("A combo cannot contain another combo");
         }
         comboItems.put(item.getId(), item);
     }
@@ -38,6 +38,7 @@ public class ComboItem extends MenuItem{
         for(var item:comboItems.values()){
             total=total.add(item.calculateItemPrice());
         }
-        return total.multiply(discount);
+        BigDecimal discountAmount =total.multiply(discount);
+        return total.subtract(discountAmount);
     }
 }

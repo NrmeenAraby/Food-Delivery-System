@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public class WeightedItem extends MenuItem{
     private BigDecimal price;
-    public WeightedItem(String name, ItemCategory itemCategory, int preparationTimeMinutes,BigDecimal price) {
-        super(name, itemCategory, preparationTimeMinutes);
+    public WeightedItem(String name, ItemCategory itemCategory, int preparationTimeMinutes,double stockQuantity,BigDecimal price) {
+        super(name, itemCategory, preparationTimeMinutes,stockQuantity);
         this.price=price;
     }
 

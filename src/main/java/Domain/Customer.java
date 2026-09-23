@@ -4,9 +4,10 @@ import Exceptions.InsufficientWalletException;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Customer {
-    private static int nextId = 1;
+    private static AtomicInteger nextId = new AtomicInteger(1);
     private final String id;
     private String name;
     private String phoneNumber;
@@ -17,7 +18,7 @@ public class Customer {
     private static final int GOLD_TIER_ORDERS =30;
     private Deque<SearchCriteria> lastSearches;
     public Customer(String name, String phoneNumber, BigDecimal walletBalance) {
-        id="C-"+Integer.toString(nextId++);
+        id="C-"+nextId.getAndIncrement();
         this.name = name;
         addresses=new ArrayList<>();
         setPhoneNumber(phoneNumber);
