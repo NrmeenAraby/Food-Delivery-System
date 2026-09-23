@@ -31,4 +31,7 @@ public class OrderRepository {
     public List<Order> getAllOrders(){
         return orders.values().stream().toList();
     }
+    public void addReadyOrder(Order order){
+        readyOrders.add(order);
+    }
 }

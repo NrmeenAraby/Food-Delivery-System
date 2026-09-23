@@ -78,7 +78,6 @@ public class Rider {
         incrementCompletedDeliveries();
     }
     public boolean canHandleOrder(Order order){
-
-        return  activeOrder==null && dispatchStrategy.canAssign(order);
+        return  isAvailable() && dispatchStrategy.canAssign(order);
     }
 }
