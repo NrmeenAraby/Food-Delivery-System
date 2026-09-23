@@ -25,8 +25,9 @@ public class Order {
     private LocalDateTime assignedAt;
     private LocalDateTime deliveredAt;
     private EventPublisher eventPublisher;
+    private BigDecimal distanceKm;
 
-    public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion) {
+    public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion, BigDecimal distanceKm) {
         id="O-"+Integer.toString(nextId++);
         this.customer = customer;
         this.restaurantId = restaurantId;
@@ -36,8 +37,14 @@ public class Order {
         orderStatus=OrderStatus.PLACED;
         this.promotion=promotion;
         this.eventPublisher=new EventPublisher();
+        this.distanceKm=distanceKm;
     }
 
+    public BigDecimal getTotalOrderUnits(){
+        return lineItems.stream()
+                .map(OrderLine::getQuantity)
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
+    }
     public EventPublisher getEventPublisher() {
         return eventPublisher;
     }
@@ -106,6 +113,10 @@ public class Order {
         };
     }
 
+    public BigDecimal getDistanceKm() {
+        return distanceKm;
+    }
+
     public Customer getCustomer() {
         return customer;
     }
@@ -134,13 +145,13 @@ public class Order {
         return promotion;
     }
 
-    public OrderPrice calculatePrice(BigDecimal distanceKm){
+    public OrderPrice calculatePrice(){
         BigDecimal subTotal=BigDecimal.ZERO;
         for(var lineItem:lineItems){
             subTotal=subTotal.add(lineItem.calculateOrderLine());
         }
 
-        BigDecimal deliveryFee=calculateDeliveryFee(distanceKm);
+        BigDecimal deliveryFee=calculateDeliveryFee(this.distanceKm);
 
         BigDecimal serviceFee=subTotal
                 .multiply(PlatformConfig.getInstance().getServiceFeeRate())

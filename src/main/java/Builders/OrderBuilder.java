@@ -12,6 +12,7 @@ public class OrderBuilder {
     private Address deliveryAddress;
     private List<OrderLine> lineItems=new ArrayList<>();
     private Promotion promotion;
+    private BigDecimal distanceKm;
 
     public void addLineItem(MenuItem item, BigDecimal quantity){
         for(int idx=0;idx<lineItems.size();idx++){
@@ -48,6 +49,10 @@ public class OrderBuilder {
         this.promotion = promotion;
         return this;
     }
+    public OrderBuilder setPromotion(BigDecimal distanceKm) {
+        this.distanceKm = distanceKm;
+        return this;
+    }
 
     public Order build(){
         if (customer == null
@@ -56,6 +61,6 @@ public class OrderBuilder {
                 || lineItems.isEmpty()) {
             throw new IllegalStateException("Missing required order information");
         }
-        return new Order(customer,restaurantId,deliveryAddress, lineItems,promotion);
+        return new Order(customer,restaurantId,deliveryAddress, lineItems,promotion,distanceKm);
     }
 }

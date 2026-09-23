@@ -1,6 +1,10 @@
 package Domain;
 
+import DispatchRiderStrategies.DispatchStrategy;
 import Exceptions.RiderBusyException;
+import Factories.DispatchStrategyFactory;
+
+import java.math.BigDecimal;
 
 public class Rider {
     private static int nextId = 1;
@@ -11,14 +15,17 @@ public class Rider {
     private boolean availabilityStatus;
     private int completedDeliveriesCount;
     private Order activeOrder;
+    private final DispatchStrategy dispatchStrategy;
 
-    public Rider(String name, VehicleType vehicleType, String district) {
+    public Rider(String name, VehicleType vehicleType, String district,
+                 BigDecimal maxRange,BigDecimal maxOrdersUnits, BigDecimal maxSpeed) {
         id="RD-"+Integer.toString(nextId++);
         this.name = name;
         this.vehicleType = vehicleType;
         this.district = district;
         availabilityStatus=true;
         completedDeliveriesCount=0;
+        dispatchStrategy= DispatchStrategyFactory.createDispatchStrategy(vehicleType,maxRange,maxOrdersUnits,maxSpeed);
     }
 
     public static int getNextId() {
@@ -69,5 +76,9 @@ public class Rider {
         activeOrder=null;
         updateAvailabilityStatus(true);
         incrementCompletedDeliveries();
+    }
+    public boolean canHandleOrder(Order order){
+
+        return  activeOrder==null && dispatchStrategy.canAssign(order);
     }
 }
