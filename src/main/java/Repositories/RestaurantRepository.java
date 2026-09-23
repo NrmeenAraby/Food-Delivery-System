@@ -3,6 +3,7 @@ package Repositories;
 import Domain.CuisineCategory;
 import Domain.Order;
 import Domain.Restaurant;
+import Filters.RestaurantFilter;
 
 import java.util.*;
 
@@ -31,5 +32,11 @@ public class RestaurantRepository {
     }
     public List<Restaurant> getAllRestaurants(){
         return restaurants.values().stream().toList();
+    }
+    public List<Restaurant>searchByCriteria(RestaurantFilter restaurantFilter){
+        return restaurants.values().stream()
+                .filter(Restaurant::isOpen)
+                .filter(restaurantFilter::matches)
+                .toList();
     }
 }
