@@ -4,8 +4,10 @@ package Repositories;
 import Domain.LoyaltyTier;
 import Domain.Order;
 
+import java.awt.*;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class OrderRepository {
@@ -25,5 +27,8 @@ public class OrderRepository {
     }
     public Order findById(String orderId){
         return orders.get(orderId);
+    }
+    public List<Order> getAllOrders(){
+        return orders.values().stream().toList();
     }
 }

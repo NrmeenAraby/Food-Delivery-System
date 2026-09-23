@@ -1,6 +1,7 @@
 package Repositories;
 
 import Domain.CuisineCategory;
+import Domain.Order;
 import Domain.Restaurant;
 
 import java.util.*;
@@ -27,5 +28,8 @@ public class RestaurantRepository {
         return restaurants.values().stream()
                 .sorted(ratingSorted)
                 .toList();
+    }
+    public List<Restaurant> getAllRestaurants(){
+        return restaurants.values().stream().toList();
     }
 }

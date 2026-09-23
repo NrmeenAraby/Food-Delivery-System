@@ -13,6 +13,7 @@ public class Restaurant {
     private int ratingCount;
     private final Menu menu;
     private boolean status; //true>> open
+    private int completedOrders;
 
     public Restaurant(String name,String district,Menu menu){
         id="RS-"+Integer.toString(nextId++);
@@ -21,6 +22,19 @@ public class Restaurant {
         this.menu=menu;
         cuisineCategories=new HashSet<>();
         status=true;
+        completedOrders=0;
+    }
+
+    public void incrementCompletedOrders() {
+        completedOrders++;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public int getCompletedOrders() {
+        return completedOrders;
     }
 
     public static int getNextId() {

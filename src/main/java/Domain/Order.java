@@ -5,6 +5,7 @@ import Exceptions.InvalidOrderTransition;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,10 @@ public class Order {
     private final LocalDateTime placedAt;
     private OrderStatus orderStatus;
     private Promotion promotion;
+    private OrderPrice finalPrice;
+    private String riderId;
+    private LocalDateTime assignedAt;
+    private LocalDateTime deliveredAt;
 
     public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion) {
         id="O-"+Integer.toString(nextId++);
@@ -35,6 +40,17 @@ public class Order {
         return id;
     }
 
+    public String getRiderId() {
+        return riderId;
+    }
+
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
 
     public void applyPromotion(Promotion promotion) {
         if (this.promotion != null) {
@@ -137,6 +153,14 @@ public class Order {
         OrderPrice orderPrice=new OrderPrice(subTotal,deliveryFee,serviceFee,promotionDiscount,total);
         return orderPrice;
     }
+
+    public void setFinalPrice(OrderPrice price){
+        this.finalPrice=price;
+    }
+    public OrderPrice getFinalPrice() {
+        return finalPrice;
+    }
+
     private BigDecimal calculateDeliveryFee(BigDecimal distanceKm){
         BigDecimal deliveryFee=PlatformConfig.getInstance().getBaseDeliveryFee();
         BigDecimal remainingKms=distanceKm.subtract(BigDecimal.valueOf(3));
@@ -148,5 +172,18 @@ public class Order {
 
         return deliveryFee;
     }
+    public void assignRider(String riderId){
+        if(riderId!=null){
+            throw new IllegalStateException("Order already assigned to a rider");
+        }
+        this.riderId = riderId;
+        this.assignedAt=LocalDateTime.now();
+        changeStatus(OrderStatus.ASSIGNED);
+    }
+    public void markDelivered(){
+        this.deliveredAt=LocalDateTime.now();
+        changeStatus(OrderStatus.DELIVERED);
+    }
+
 
 }

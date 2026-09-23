@@ -1,0 +1,165 @@
+package Services;
+
+import Domain.*;
+import Repositories.CustomerOrderHistoryReport;
+import Repositories.OrderRepository;
+import Repositories.RestaurantRepository;
+import Repositories.RiderRepository;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class ReportService {
+    private OrderRepository orderRepository;
+    private RestaurantRepository restaurantRepository;
+    private RiderRepository riderRepository;
+
+
+    public void setOrderRepository(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
+    public void setRestaurantRepository(RestaurantRepository restaurantRepository) {
+        this.restaurantRepository = restaurantRepository;
+    }
+    public void setRiderRepository(RiderRepository riderRepository) {
+        this.riderRepository = riderRepository;
+    }
+
+    public BigDecimal getTotalRevenue(LocalDate from, LocalDate to){
+        return orderRepository.getAllOrders().stream()
+                .filter(o->o.getOrderStatus()== OrderStatus.DELIVERED)
+                .filter(o-> {
+                            LocalDate date =o.getPlacedAt().toLocalDate();
+                            return !date.isBefore(from) && !date.isAfter(to);
+                        })
+                .map(o->o.getFinalPrice().total())
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
+    }
+    public List<Map.Entry<Restaurant,BigDecimal>> getTopFiveRestaurantsByRevenue(YearMonth month){
+        Map<String,BigDecimal> restaurantsRevenue = orderRepository.getAllOrders().stream()
+                .filter(o->o.getOrderStatus()== OrderStatus.DELIVERED)
+                .filter( o->{
+                    YearMonth orderMonth=YearMonth.from(o.getPlacedAt());
+                    return  orderMonth.equals(month);
+                })
+                .collect(Collectors.groupingBy(
+                        Order::getRestaurantId,
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                (Order o)->o.getFinalPrice().total(),
+                                BigDecimal::add)));
+
+        return restaurantsRevenue.entrySet().stream()
+                .sorted(Map.Entry.<String,BigDecimal>comparingByValue().reversed())
+                .limit(5)
+                .map(entry-> Map.entry(
+                        restaurantRepository.findById(entry.getKey()),
+                        entry.getValue()
+                ))
+                .toList();
+    }
+    public Map<String, Double> getAvgOrderValuePerDistrict(){
+        return orderRepository.getAllOrders().stream()
+                .filter(order -> order.getOrderStatus()==OrderStatus.DELIVERED)
+                .collect(Collectors.groupingBy(
+                     o->o.getDeliveryAddress().district()
+                ,Collectors.averagingDouble(
+                        o->o.getFinalPrice().total().doubleValue()
+                        )));
+    }
+    public List<Restaurant> topRatingAndTwentyOrders(){
+        return restaurantRepository.getAllRestaurants().stream()
+                .filter( restaurant->restaurant.getAvgRating()>4.5)
+                .filter(restaurant -> restaurant.getCompletedOrders()>=20)
+                .toList();
+    }
+    public Map<OrderStatus,Long> getCountOfEachOrderStatus(){
+        return orderRepository.getAllOrders().stream()
+                .collect(Collectors.groupingBy(Order::getOrderStatus
+                ,Collectors.counting()));
+    }
+    public List<RiderDeliveryReport> getRiderCompleteDeliveriesAndAvgDuration(){
+        Map<String,List<Order>> riderOrders= orderRepository.getAllOrders().stream()
+                .filter(order->order.getOrderStatus()==OrderStatus.DELIVERED)
+                .collect(Collectors.groupingBy(Order::getRiderId));
+
+        return riderOrders.entrySet().stream()
+                .map(
+                        entry->{
+                            String riderId=entry.getKey();
+                            Rider rider=riderRepository.findById(riderId);
+                            List<Order> orders=entry.getValue();
+                            double avgDuration = orders.stream()
+                                    .mapToLong(
+                                            o-> Duration.between(o.getAssignedAt(),o.getDeliveredAt()).getSeconds())
+                                    .average()
+                                    .orElse(0);
+                            return new RiderDeliveryReport(
+                                   rider,orders.size()
+                                    ,Duration.ofSeconds((long)avgDuration)
+                            );
+                        }
+                )
+                .sorted(Comparator.comparing(RiderDeliveryReport::completedDeliveries).reversed())
+                .toList();
+
+    }
+    public Optional<MenuItem> getMostFrequentlyMenuItem(){
+        Map<MenuItem,Long> menuItems=orderRepository.getAllOrders().stream()
+                .flatMap(o->o.getLineItems().stream())
+                .collect(Collectors.groupingBy(
+                        OrderLine::getMenuItem
+                ,Collectors.counting()));
+
+        return  menuItems.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
+
+    }
+
+    public CustomerOrderHistoryReport getCustomerOrderHistoryAndTotalSpent(String customerId){
+      List<Order> customerOrders = orderRepository.getAllOrders().stream()
+                .filter(o->o.getOrderStatus()==OrderStatus.DELIVERED)
+                .filter(o->o.getCustomer().getId().equals(customerId))
+              .sorted(Comparator.comparing(Order::getPlacedAt).reversed())
+                .toList();
+
+        BigDecimal totalSpent=customerOrders.stream()
+                .map(o->o.getFinalPrice().total())
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
+
+        return new CustomerOrderHistoryReport(customerOrders,totalSpent);
+
+    }
+    public Optional<Integer> getPeakOrderingHour(){
+        Map<Integer,Long> ordersHours=orderRepository.getAllOrders().stream()
+                .collect(Collectors.groupingBy(o->o.getPlacedAt().getHour(),
+                        Collectors.counting()));
+
+        return ordersHours.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
+    }
+    public List<Customer> getIdleCustomers(){
+        LocalDate cutOff=LocalDate.now().minusDays(30);
+       Map<Customer,List<Order>> customerOrders = orderRepository.getAllOrders().stream()
+               .collect(Collectors.groupingBy(Order::getCustomer));
+
+       return customerOrders.values().stream()
+               .filter(orders -> orders.stream()
+                       .map(Order::getPlacedAt)
+                       .max(LocalDateTime::compareTo)
+                       .map(date->date.toLocalDate().isBefore(cutOff))
+                       .orElse(true))
+               .map(orders -> orders.get(0).getCustomer())
+               .toList();
+    }
+
+
+}

@@ -57,7 +57,7 @@ public class Rider {
     }
     public void assignOrder(Order order){
         if(activeOrder!=null){
-            throw new RiderBusyException("Rider already has an active order")
+            throw new RiderBusyException("Rider already has an active order");
         }
         activeOrder=order;
         updateAvailabilityStatus(false);

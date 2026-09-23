@@ -3,10 +3,7 @@ package Domain;
 import Exceptions.InsufficientWalletException;
 
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 public class Customer {
     private static int nextId = 1;
@@ -117,5 +114,13 @@ public class Customer {
         return completedOrderCount==0;
     }
 
-
+    @Override
+    public boolean equals(Object obj) {
+        if(obj==null) return false;
+        if(!(obj instanceof Customer other)) return false;
+        return this.id.equals(other.id);
+    }
+    public int hashCode(){
+        return Objects.hash(id);
+    }
 }
