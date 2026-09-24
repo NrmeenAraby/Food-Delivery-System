@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 public class SearchCriteria {
     private String district;
     private CuisineCategory cuisineCategory;
-    private  double minimumRating;
+    private  Double minimumRating;
     private BigDecimal priceCeiling;
-
+    private String keyword;
     public void setDistrict(String district) {
         this.district = district;
     }
@@ -16,7 +16,7 @@ public class SearchCriteria {
         this.cuisineCategory = cuisineCategory;
     }
 
-    public void setMinimumRating(double minimumRating) {
+    public void setMinimumRating(Double minimumRating) {
         this.minimumRating = minimumRating;
     }
 
@@ -32,11 +32,18 @@ public class SearchCriteria {
         return cuisineCategory;
     }
 
-    public double getMinimumRating() {
+    public Double getMinimumRating() {
         return minimumRating;
     }
 
     public BigDecimal getPriceCeiling() {
         return priceCeiling;
+    }
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getKeyword() {
+        return keyword;
     }
 }
