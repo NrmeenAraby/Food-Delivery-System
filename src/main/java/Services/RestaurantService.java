@@ -1,7 +1,10 @@
 package Services;
 
+import Domain.MenuItem;
 import Domain.Restaurant;
 import Domain.SearchCriteria;
+import Exceptions.RestaurantClosedException;
+import Exceptions.RestaurantNotFoundException;
 import Filters.RestaurantFilter;
 import Repositories.RestaurantRepository;
 
@@ -42,11 +45,23 @@ public class RestaurantService {
        }
         return restaurantRepository.searchByCriteria(restaurantFilter);
     }
+    public List<MenuItem> getMenu(String restaurantId){
+        Restaurant restaurant=restaurantRepository.findById(restaurantId);
+        if(restaurant==null){
+            throw new RestaurantNotFoundException(
+                    "No restaurant found with this ID: " + restaurantId
+            );
+        }
+        return  restaurant.getMenu().getItems();
+    }
     public List<Restaurant> freeTextSearch(String freeTxt){
         String keyword=freeTxt.toUpperCase();
         RestaurantFilter restaurantFilter= r->r.getName().toUpperCase().contains(keyword)
                 || r.getCuisineCategories().stream()
                 .anyMatch(c->c.name().contains(keyword));
         return restaurantRepository.searchByCriteria(restaurantFilter);
+    }
+    public Restaurant findById(String restaurantId){
+        return  restaurantRepository.findById(restaurantId);
     }
 }

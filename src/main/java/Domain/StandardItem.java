@@ -14,4 +14,9 @@ public class StandardItem extends MenuItem{
     public BigDecimal calculateItemPrice() {
         return price;
     }
+
+    @Override
+    public MenuItemType getMenuItemType() {
+        return MenuItemType.STANDARD;
+    }
 }

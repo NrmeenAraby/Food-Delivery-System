@@ -30,4 +30,7 @@ public class CustomerService {
 
         return false;
     }
+    public Customer findById(String customerId){
+        return customerRepository.findById(customerId);
+    }
 }

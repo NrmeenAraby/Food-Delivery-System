@@ -68,6 +68,7 @@ public abstract class MenuItem {
         this.availabilityFlag=availabilityFlag;
     }
     public abstract BigDecimal calculateItemPrice();
+    public abstract MenuItemType getMenuItemType();
 
     @Override
     public boolean equals(Object o) {

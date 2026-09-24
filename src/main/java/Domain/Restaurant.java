@@ -30,9 +30,6 @@ public class Restaurant {
         completedOrders++;
     }
 
-    public boolean isStatus() {
-        return status;
-    }
 
     public int getCompletedOrders() {
         return completedOrders;

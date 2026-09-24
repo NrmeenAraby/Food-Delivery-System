@@ -1,28 +1,35 @@
 package Consoles;
 
-import Domain.CuisineCategory;
-import Domain.Customer;
-import Domain.Restaurant;
-import Domain.SearchCriteria;
+import Builders.OrderBuilder;
+import Domain.*;
+import Exceptions.*;
+import Repositories.PromotionRepository;
 import Services.CustomerService;
+import Services.OrderService;
 import Services.RestaurantService;
 import Utils.InputHelper;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class CustomerConsole {
     private final InputHelper inputHelper;
     private final CustomerService customerService;
     private final RestaurantService restaurantService;
+    private final OrderService orderService;
+    private final PromotionRepository promotionRepository;
     private String customerId;
 
-    public CustomerConsole(String customerId,InputHelper inputHelper,CustomerService customerService,RestaurantService restaurantService) {
+    public CustomerConsole(String customerId, InputHelper inputHelper, CustomerService customerService,
+                           RestaurantService restaurantService, OrderService orderService, PromotionRepository promotionRepository) {
         this.customerId=customerId;
         this.inputHelper = inputHelper;
         this.customerService=customerService;
         this.restaurantService=restaurantService;
+        this.orderService=orderService;
+        this.promotionRepository = promotionRepository;
     }
 
     public void start() {
@@ -30,11 +37,12 @@ public class CustomerConsole {
         do {
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
+            try{
             switch (choice) {
                 case 1 -> browseRestaurants();
                 case 2 -> searchRestaurants();
-//                case 3 -> viewMenu();
-//                case 4 -> placeOrder();
+                case 3 -> viewMenu();
+                case 4 -> placeOrder();
 //                case 5 -> payForOrder();
 //                case 6 -> trackOrder();
 //                case 7 -> cancelOrder();
@@ -42,7 +50,130 @@ public class CustomerConsole {
                 case 0 -> System.out.println("Ciao!");
                 default -> System.out.println("Invalid choice. Please try again.");
             }
+        }catch(PlatformException e){
+                System.out.println(e.getMessage());
+            }
         }while(choice!=0);
+    }
+
+    private void placeOrder() {
+        System.out.println("Enter order info");
+
+        Customer customer = customerService.findById(customerId);
+
+        String restaurantId = inputHelper.readString("Restaurant ID: ");
+
+        Restaurant restaurant = restaurantService.findById(restaurantId);
+        if (restaurant == null) {
+            throw new PlatformException("There isn't restaurant with this ID.\"");
+        }
+        if (!restaurant.isOpen()) {
+            throw new RestaurantClosedException("This restaurant is closed.");
+        }
+        System.out.println("Choose delivery address:");
+        List<Address> customerAddresses = customer.getAddresses();
+        viewCustomerAddresses(customerAddresses);
+        int choice;
+        do {
+            choice = inputHelper.readInt("Enter address number:");
+        } while (choice <= 0 || choice > customerAddresses.size());
+
+        Address deliveryAddress = customerAddresses.get(--choice);
+
+        List<MenuItem> menuItems = restaurantService.getMenu(restaurantId);
+        List<OrderLine> lineItems = new ArrayList<>();
+        int itemNumber;
+        while (true) {
+            Map<Integer, MenuItem> displayedItems = showGroupedMenuByCriteria(menuItems, MenuItem::getItemCategory);
+            do {
+                itemNumber = inputHelper.readInt("Choose Item(0 to exit): ");
+            } while (itemNumber < 0 || itemNumber > menuItems.size());
+            System.out.println("\n" + "0. Done");
+            if (itemNumber == 0)
+                break;
+            MenuItem pickedMenuItem = displayedItems.get(itemNumber);
+            if (pickedMenuItem == null) {
+                System.out.println("Invalid item number.");
+                continue;
+            }
+
+            if (!pickedMenuItem.isAvailable()) {
+                throw new UnavailableItemException("This item isn't available.");
+            }
+            double quantity = inputHelper.readDouble("Quantity: ");
+            while (quantity <= 0.0) {
+                System.out.println("Quantity must be greater than zero.");
+                quantity = inputHelper.readDouble("Quantity: ");
+            }
+            if (!pickedMenuItem.hasEnoughStock(quantity)) {
+                throw new StockShortageException("The exist quantity cant cover this order.");
+            }
+            lineItems.add(new OrderLine(pickedMenuItem, BigDecimal.valueOf(quantity)));
+        }
+        BigDecimal distance = inputHelper.readBigDecimal("Enter the estimated distance: ");
+        while (distance.compareTo(BigDecimal.ZERO) <= 0) {
+            System.out.println("Distance must be greater than zero");
+            distance = inputHelper.readBigDecimal("Enter the estimated distance: ");
+        }
+        String promoCode = inputHelper.readString("Enter promo code (press Enter to skip): ");
+        Promotion promotion=null;
+        if (!promoCode.isBlank()) {
+            promotion = promotionRepository.findByCode(promoCode);
+
+            if (promotion == null) {
+                throw new IllegalPromotionException("Invalid promo code.");
+            }
+
+            if (promotion.isExpired()) {
+                throw new IllegalPromotionException("This promotion is expired.");
+            }
+        }
+        OrderBuilder orderBuilder=new OrderBuilder().setCustomer(customer)
+                .setRestaurantId(restaurantId)
+                .setDeliveryAddress(deliveryAddress)
+                .setLineItems(lineItems)
+                .setDistanceKm(distance)
+                .setPromotion(promotion);
+
+        Order order=orderBuilder.build();
+        orderService.addOrder(order);
+    }
+    private void viewCustomerAddresses(List<Address>addresses){
+        for(int i=0;i<addresses.size();i++){
+            Address address=addresses.get(i);
+            System.out.println((i+1)+". "+address.details()+
+                    ", "+address.district());
+        }
+    }
+    private void viewMenu(){
+        String restaurantId=inputHelper.readString("Enter the restaurant ID: ");
+        try{
+            List<MenuItem> menuItems = restaurantService.getMenu(restaurantId);
+            if(menuItems.isEmpty()){
+                System.out.println("No items available.");
+                return;
+            }
+            showGroupedMenuByCriteria(menuItems, MenuItem::getMenuItemType);
+        }
+        catch(PlatformException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    private void searchRestaurants(){
+        String freeTxt = inputHelper.readString("Search: ").trim();
+        while(freeTxt.isBlank()) {
+            System.out.println("Search cannot be empty.");
+            freeTxt = inputHelper.readString("Enter: ");
+        }
+        SearchCriteria criteria=new SearchCriteria();
+        criteria.setKeyword(freeTxt);
+        customerService.saveSearch(customerId,criteria);
+        List<Restaurant> filteredRestaurants=restaurantService.freeTextSearch(freeTxt);
+        if(filteredRestaurants.isEmpty()){
+            System.out.println("No restaurants found.");
+            return;
+        }
+        showRestaurants(filteredRestaurants);
     }
     private void browseRestaurants(){
         SearchCriteria criteria = new SearchCriteria();
@@ -81,21 +212,31 @@ public class CustomerConsole {
         filteredRestaurants.sort(Comparator.comparing(Restaurant::getAvgRating).reversed());
         showRestaurants(filteredRestaurants);
     }
-    private void searchRestaurants(){
-        String freeTxt = inputHelper.readString("Search: ").trim();
-       while(freeTxt.isBlank()) {
-            System.out.println("Search cannot be empty.");
-            freeTxt = inputHelper.readString("Enter: ");
+
+
+    private<T> Map<Integer, MenuItem> showGroupedMenuByCriteria(List<MenuItem>menuItems,
+                                              Function<MenuItem,T>criteria){
+        LinkedHashMap<T,List<MenuItem>> toShow = menuItems.stream()
+                .collect(Collectors.groupingBy(criteria,
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+
+        Map<Integer, MenuItem> displayedItems = new LinkedHashMap<>();
+        System.out.println("===== Menu =====");
+        int idx=0;
+        for(var entry: toShow.entrySet()){
+            System.out.println( "===== "+entry.getKey()+"  ===== ");
+            for(var item:entry.getValue()){
+                idx++;
+                displayedItems.put(idx, item);
+                System.out.println(idx+". "+item.getName()
+                        +" | "+item.calculateItemPrice()+" EGP "
+                        +" | "+ item.getPreparationTimeMinutes() +" min "
+                        +" | "+(item.isAvailable()?"Available":"Unavailable"));
+                System.out.println();
+            }
         }
-       SearchCriteria criteria=new SearchCriteria();
-       criteria.setKeyword(freeTxt);
-       customerService.saveSearch(customerId,criteria);
-       List<Restaurant> filteredRestaurants=restaurantService.freeTextSearch(freeTxt);
-        if(filteredRestaurants.isEmpty()){
-            System.out.println("No restaurants found.");
-            return;
-        }
-        showRestaurants(filteredRestaurants);
+        return displayedItems;
     }
     private void showRestaurants(List<Restaurant> restaurants){
                 for(int i=0;i<restaurants.size();i++){

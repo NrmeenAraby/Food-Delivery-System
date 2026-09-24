@@ -52,7 +52,7 @@ public class Promotion {
         if(subTotal.compareTo(minimumSubTotal)<0) {
             throw new IllegalPromotionException("The subtotal less than minimum subtotal needed to apply this promotion");
         }
-        if (expiryDate.isBefore(LocalDate.now())){
+        if (isExpired()){
             throw new IllegalPromotionException("This promotion is expired");
         }
         if(firstTimeCustomersRestriction && !firstTimeCustomer){
@@ -61,6 +61,10 @@ public class Promotion {
         if(restrictedDistrict !=null && !restrictedDistrict.equals(targetedDistrict)){
             throw new IllegalPromotionException("This promotion is restricted only to "+ restrictedDistrict);
         }
+    }
+
+    public boolean isExpired(){
+        return expiryDate.isBefore(LocalDate.now());
     }
 
     public PromotionStrategy getPromotionStrategy() {

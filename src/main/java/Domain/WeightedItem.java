@@ -13,4 +13,9 @@ public class WeightedItem extends MenuItem{
     public BigDecimal calculateItemPrice() {
         return price;
     }
+
+    @Override
+    public MenuItemType getMenuItemType() {
+        return MenuItemType.WEIGHTED;
+    }
 }

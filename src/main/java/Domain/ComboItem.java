@@ -41,4 +41,9 @@ public class ComboItem extends MenuItem{
         BigDecimal discountAmount =total.multiply(discount);
         return total.subtract(discountAmount);
     }
+
+    @Override
+    public MenuItemType getMenuItemType() {
+        return MenuItemType.COMBO;
+    }
 }
