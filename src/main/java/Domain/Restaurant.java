@@ -16,11 +16,11 @@ public class Restaurant {
     private boolean status; //true>> open
     private int completedOrders;
 
-    public Restaurant(String name,String district,Menu menu){
+    public Restaurant(String name,String district){
         id="RS-"+nextId.getAndIncrement();
         this.name=name;
         this .district=district;
-        this.menu=menu;
+        this.menu=new Menu();
         cuisineCategories=new HashSet<>();
         status=true;
         completedOrders=0;

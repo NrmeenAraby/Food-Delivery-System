@@ -3,9 +3,12 @@ package Services;
 import Domain.Order;
 import Domain.OrderStatus;
 import Domain.Rider;
+import Domain.VehicleType;
 import Exceptions.PlatformException;
 import Exceptions.RiderBusyException;
 import Repositories.RiderRepository;
+
+import java.math.BigDecimal;
 
 public class RiderService {
     private final RiderRepository riderRepository;
@@ -16,7 +19,30 @@ public class RiderService {
         this.riderRepository = riderRepository;
         this.orderService = orderService;
         this.reportService = reportService;
-
+    }
+    public void removeRider(String riderId){
+        Rider rider=riderRepository.findById(riderId);
+        if(rider==null){
+            throw new PlatformException("No rider with this ID");
+        }
+        if(rider.hasActiveOrder()){
+            throw new PlatformException("Cannot remove a rider with an active order.");
+        }
+        riderRepository.removeRider(riderId);
+    }
+    public void addRider(String name, VehicleType vehicleType, String district,
+             BigDecimal maxRange, BigDecimal maxOrdersUnits, BigDecimal maxSpeed){
+        if(maxRange.compareTo(BigDecimal.ZERO)<=0){
+            throw new PlatformException("Max range must be positive");
+        }
+        if(maxOrdersUnits.compareTo(BigDecimal.ZERO)<=0){
+            throw new PlatformException("Max order units must be positive");
+        }
+        if(maxSpeed.compareTo(BigDecimal.ZERO)<=0){
+            throw new PlatformException("Max speed must be positive");
+        }
+        Rider rider=new Rider(name,vehicleType,district,maxRange,maxOrdersUnits,maxSpeed);
+        riderRepository.addRider(rider);
     }
     public RiderDeliveryReport viewStatistics(String riderId){
         getRider(riderId); // throws if no rider

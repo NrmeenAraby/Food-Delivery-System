@@ -8,7 +8,7 @@ import Filters.RestaurantFilter;
 import java.util.*;
 
 public class RestaurantRepository {
-    private Map<String, Restaurant> restaurants=new HashMap<>();
+    private final Map<String, Restaurant> restaurants=new HashMap<>();
 
     public void addRestaurant(Restaurant restaurant){
         restaurants.put(restaurant.getId(),restaurant);
@@ -38,5 +38,8 @@ public class RestaurantRepository {
                 .filter(Restaurant::isOpen)
                 .filter(restaurantFilter::matches)
                 .toList();
+    }
+    public Restaurant removeRestaurant(String restaurantId) {
+        return restaurants.remove(restaurantId);
     }
 }

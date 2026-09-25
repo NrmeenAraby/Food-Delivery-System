@@ -1,0 +1,179 @@
+package Consoles;
+
+import Domain.PromotionType;
+import Domain.VehicleType;
+import Exceptions.PlatformException;
+import PromotionStrategies.FixedAmountPromotionStrategy;
+import PromotionStrategies.FreeDeliveryPromotionStrategy;
+import PromotionStrategies.PercentagePromotionStrategy;
+import PromotionStrategies.PromotionStrategy;
+import Services.*;
+import Utils.InputHelper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class AdminConsole {
+    private final InputHelper inputHelper;
+    private final RestaurantService restaurantService;
+    private final CustomerService customerService;
+    private final RiderService riderService;
+    private final PromotionService promotionService;
+    private final ReportService reportService;
+    public AdminConsole(InputHelper inputHelper, RestaurantService restaurantService, CustomerService customerService, RiderService riderService, PromotionService promotionService, ReportService reportService) {
+        this.inputHelper = inputHelper;
+        this.restaurantService = restaurantService;
+        this.customerService = customerService;
+        this.riderService = riderService;
+        this.promotionService = promotionService;
+        this.reportService = reportService;
+    }
+
+    public void start() {
+        int choice;
+        do {
+            showMenu();
+            choice = inputHelper.readInt("Choose an option: ");
+
+            try {
+                switch (choice) {
+                    case 1 -> addRestaurant();
+                    case 2 -> removeRestaurant();
+                    case 3 -> addCustomer();
+                    case 4 -> removeCustomer();
+                    case 5 -> addRider();
+                    case 6 -> removeRider();
+                    case 7 -> createPromotion();
+//                    case 8 -> runReports();
+//                    case 9 -> viewPlatformStatistics();
+                    case 0 -> System.out.println("Ciao!");
+                    default -> System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (PlatformException e) {
+                System.out.println(e.getMessage());
+            }
+
+        } while (choice != 0);
+    }
+
+    private void createPromotion(){
+        System.out.println("Enter the promotion info ");
+        String code=inputHelper.readString("Promo Code: ");
+        BigDecimal minimumSubTotal=inputHelper.readBigDecimal("Minimum subtotal to apply the promotion: ");
+        LocalDate expiryDate=inputHelper.readLocalDate("Expiry date: ");
+        boolean isDistrictRestricted=inputHelper.readYesNo("Restrict promotion to a specific district?");
+        String restrictedDistrict=null;
+        if(isDistrictRestricted){
+            restrictedDistrict=inputHelper.readString("Enter the restricted district: ");
+        }
+        boolean firstTimeCustomersRestriction= inputHelper.readYesNo("Restrict to first-time customers?");
+        PromotionType promotionType=readPromotionType();
+        PromotionStrategy promotionStrategy = switch (promotionType) {
+            case PERCENTAGE -> new PercentagePromotionStrategy(
+                    inputHelper.readBigDecimal("Percentage: "),
+                    inputHelper.readBigDecimal("Maximum discount cap: ")
+            );
+            case FIXED_AMOUNT -> new FixedAmountPromotionStrategy(
+                    inputHelper.readBigDecimal("Discount amount: ")
+            );
+            case FREE_DELIVERY -> new FreeDeliveryPromotionStrategy();
+        };
+        promotionService.createPromotion(code,minimumSubTotal,expiryDate,restrictedDistrict,
+                firstTimeCustomersRestriction,promotionStrategy);
+        System.out.println("Promotion created successfully.");
+    }
+    private void removeRider() {
+        String riderId=inputHelper.readString("Rider ID: ");
+        riderService.removeRider(riderId);
+        System.out.println("Rider " + riderId + " removed successfully.");
+    }
+    private void addRider(){
+        System.out.println("Enter the rider info ");
+        String name=inputHelper.readString("Name: ");
+        VehicleType vehicleType=readVehicleType();
+        String district=inputHelper.readString("District: ");
+        System.out.println("Now enter the vehicle info");
+        BigDecimal maxRange=inputHelper.readBigDecimal("Max Range: ");
+        BigDecimal maxOrdersUnits=inputHelper.readBigDecimal("Max order units it can hold: ");
+        BigDecimal maxSpeed=inputHelper.readBigDecimal("Max speed: ");
+        riderService.addRider(name,vehicleType,district,maxRange,maxOrdersUnits,maxSpeed);
+        System.out.println("Rider added successfully.");
+    }
+    private void removeCustomer(){
+        String customerId=inputHelper.readString("Customer ID: ");
+        customerService.removeCustomer(customerId);
+        System.out.println("Customer "+customerId+"removed successfully.");
+    }
+
+    private void addCustomer(){
+        System.out.println("Enter the customer info ");
+        String name=inputHelper.readString("Name: ");
+        String phoneNumber=inputHelper.readString("Phone Number: ");
+        BigDecimal walletBalance=inputHelper.readBigDecimal("Wallet Balance: ");
+        customerService.addCustomer(name,phoneNumber,walletBalance);
+        System.out.println("Customer added successfully.");
+    }
+
+    private void removeRestaurant(){
+        String restaurantId=inputHelper.readString("Restaurant ID: ");
+        restaurantService.removeRestaurant(restaurantId);
+        System.out.println("Restaurant "+restaurantId+" removed successfully");
+    }
+    private void addRestaurant(){
+        System.out.println("Enter the restaurant info ");
+        String name=inputHelper.readString("Name: ");
+        String district=inputHelper.readString("District: ");
+        restaurantService.addRestaurant(name,district);
+        System.out.println("Restaurant added successfully.");
+    }
+    private void runReports() {
+        ReportConsole reportConsole = new ReportConsole(inputHelper, reportService);
+        reportConsole.start();
+    }
+
+    private PromotionType readPromotionType() {
+        System.out.println("Choose promotion Type:");
+
+        for (int i = 0; i < PromotionType.values().length; i++) {
+            System.out.println((i + 1) + ". " + PromotionType.values()[i]);
+        }
+        int choice;
+        do {
+            choice = inputHelper.readInt("Choose promotion type: ");
+
+            if (choice < 1 || choice > PromotionType.values().length) {
+                System.out.println("Invalid choice.");
+            }
+        } while (choice < 1 || choice > PromotionType.values().length);
+        return PromotionType.values()[choice - 1];
+    }
+    private VehicleType readVehicleType() {
+        System.out.println("Choose Vehicle Type:");
+        for (int i = 0; i < VehicleType.values().length; i++) {
+            System.out.println((i + 1) + ". " + VehicleType.values()[i]);
+        }
+        int choice;
+        do {
+            choice = inputHelper.readInt("Choose vehicle type: ");
+
+            if (choice < 1 || choice > VehicleType.values().length) {
+                System.out.println("Invalid choice.");
+            }
+        } while (choice < 1 || choice > VehicleType.values().length);
+
+        return VehicleType.values()[choice - 1];
+    }
+    private void showMenu() {
+        System.out.println("\n===== Admin Console =====");
+        System.out.println("1. Add Restaurant");
+        System.out.println("2. Remove Restaurant");
+        System.out.println("3. Add Customer");
+        System.out.println("4. Remove Customer");
+        System.out.println("5. Add Rider");
+        System.out.println("6. Remove Rider");
+        System.out.println("7. Create Promotion");
+        System.out.println("8. Run Reports");
+        System.out.println("9. View Platform Statistics");
+        System.out.println("0. Back");
+    }
+}

@@ -6,7 +6,7 @@ import Domain.Promotion;
 import java.util.HashMap;
 
 public class PromotionRepository {
-    private HashMap<String, Promotion> promotions=new HashMap<>();
+    private final HashMap<String, Promotion> promotions=new HashMap<>();
     public void addPromotion(Promotion promotion){
         promotions.put(promotion.getCode().toUpperCase(),promotion);
     }

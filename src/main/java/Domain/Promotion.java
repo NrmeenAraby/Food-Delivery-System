@@ -14,10 +14,6 @@ public class Promotion {
     private boolean firstTimeCustomersRestriction;
     private PromotionStrategy promotionStrategy;
 
-    public Promotion(String code, BigDecimal minimumSubTotal, LocalDate expiryDate,
-                     boolean firstTimeCustomersRestriction,PromotionStrategy promotionStrategy){
-        this(code,minimumSubTotal,expiryDate,null,firstTimeCustomersRestriction,promotionStrategy);
-    }
     public Promotion(String code, BigDecimal minimumSubTotal, LocalDate expiryDate,String restrictedDistrict,
                      boolean firstTimeCustomersRestriction,PromotionStrategy promotionStrategy){
         this.code =code;
@@ -49,16 +45,16 @@ public class Promotion {
     }
 
     public void isApplicable(BigDecimal subTotal, boolean firstTimeCustomer, String targetedDistrict){
-        if(subTotal.compareTo(minimumSubTotal)<0) {
-            throw new IllegalPromotionException("The subtotal less than minimum subtotal needed to apply this promotion");
-        }
         if (isExpired()){
             throw new IllegalPromotionException("This promotion is expired");
+        }
+        if(subTotal.compareTo(minimumSubTotal)<0) {
+            throw new IllegalPromotionException("The subtotal less than minimum subtotal needed to apply this promotion");
         }
         if(firstTimeCustomersRestriction && !firstTimeCustomer){
             throw new IllegalPromotionException("This promotion is first time customer restricted");
         }
-        if(restrictedDistrict !=null && !restrictedDistrict.equals(targetedDistrict)){
+        if(restrictedDistrict !=null && !restrictedDistrict.equalsIgnoreCase(targetedDistrict)){
             throw new IllegalPromotionException("This promotion is restricted only to "+ restrictedDistrict);
         }
     }

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class RiderRepository {
-    private HashMap<String, Rider> riders=new HashMap<>();
+    private final HashMap<String, Rider> riders=new HashMap<>();
     public void addRider(Rider rider){
         riders.put(rider.getId(),rider);
     }
@@ -17,5 +17,8 @@ public class RiderRepository {
     }
     public List<Rider> getAllRiders(){
         return riders.values().stream().toList();
+    }
+    public void removeRider(String riderId) {
+        riders.remove(riderId);
     }
 }

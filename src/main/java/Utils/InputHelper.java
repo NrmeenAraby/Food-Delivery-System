@@ -1,6 +1,8 @@
 package Utils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class InputHelper {
@@ -41,11 +43,6 @@ public class InputHelper {
                 System.out.print(msg);
                 BigDecimal value = new BigDecimal(input.nextLine());
 
-//                if (value.compareTo(BigDecimal.ZERO) <= 0) {
-//                    System.out.println("Please enter a positive number.");
-//                    continue;
-//                }
-
                 return value;
             } catch (NumberFormatException e) {
                 System.out.println("Please enter a valid number.");
@@ -82,5 +79,33 @@ public class InputHelper {
                 System.out.println("Please enter a valid price.");
             }
         }
+    }
+    public LocalDate readLocalDate(String message) {
+        while (true) {
+            String input = readString(message);
+
+            try {
+                return LocalDate.parse(input);
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date. Please use YYYY-MM-DD.");
+            }
+        }
+    }
+    public boolean readYesNo(String message) {
+        int choice;
+
+        do {
+            System.out.println(message);
+            System.out.println("1. Yes");
+            System.out.println("2. No");
+
+            choice = readInt("Choose: ");
+
+            if (choice < 1 || choice > 2) {
+                System.out.println("Invalid choice.");
+            }
+        } while (choice < 1 || choice > 2);
+
+        return choice == 1;
     }
 }

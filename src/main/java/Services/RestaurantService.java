@@ -1,6 +1,7 @@
 package Services;
 
 import Domain.*;
+import Exceptions.PlatformException;
 import Exceptions.RestaurantNotFoundException;
 import Filters.RestaurantFilter;
 import Repositories.OrderRepository;
@@ -15,6 +16,24 @@ public class RestaurantService {
     public RestaurantService(RestaurantRepository restaurantRepository, OrderRepository orderRepository) {
         this.restaurantRepository = restaurantRepository;
         this.orderRepository = orderRepository;
+    }
+    public void removeRestaurant(String restaurantId){
+        Restaurant restaurant=restaurantRepository.findById(restaurantId);
+        if(restaurant==null){
+            throw new PlatformException("No restaurant with this ID");
+        }
+        boolean hasActiveOrder=orderRepository.getAllOrders().stream()
+                        .anyMatch(order -> order.getRestaurantId().equals(restaurantId)
+                        && order.getOrderStatus()!=OrderStatus.DELIVERED
+                        && order.getOrderStatus()!=OrderStatus.CANCELLED);
+        if(hasActiveOrder){
+            throw new PlatformException("Cannot remove restaurant with active orders.");
+        }
+        restaurantRepository.removeRestaurant(restaurantId);
+    }
+    public void addRestaurant(String name,String district){
+        Restaurant restaurant=new Restaurant(name,district);
+        restaurantRepository.addRestaurant(restaurant);
     }
 
     public List<Order> getOrdersWithSpecificStatus(String restaurantId,OrderStatus orderStatus){

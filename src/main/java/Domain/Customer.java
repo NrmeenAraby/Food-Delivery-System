@@ -42,7 +42,7 @@ public class Customer {
             this.phoneNumber = phoneNumber;
         }
         else{
-            throw new IllegalArgumentException( "Invalid Egyptian mobile number");
+            throw new PlatformException( "Invalid Egyptian mobile number");
         }
     }
 

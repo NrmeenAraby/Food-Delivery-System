@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class CustomerRepository {
-    private HashMap<String, Customer> customers=new HashMap<>();
+    private final HashMap<String, Customer> customers=new HashMap<>();
     public void addCustomer(Customer customer){
         customers.put(customer.getId(),customer);
     }
@@ -18,5 +18,7 @@ public class CustomerRepository {
     public List<Customer> getAllCustomers(){
         return customers.values().stream().toList();
     }
-
+    public void removeCustomer(String customerId) {
+        customers.remove(customerId);
+    }
 }
