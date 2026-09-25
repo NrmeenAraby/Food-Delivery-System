@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Order {
     private static int nextId = 1;
@@ -26,6 +27,7 @@ public class Order {
     private LocalDateTime deliveredAt;
     private EventPublisher eventPublisher;
     private BigDecimal distanceKm;
+    private boolean paid;
 
     public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion, BigDecimal distanceKm) {
         id="O-"+Integer.toString(nextId++);
@@ -38,6 +40,7 @@ public class Order {
         this.promotion=promotion;
         this.eventPublisher=new EventPublisher();
         this.distanceKm=distanceKm;
+        this.paid=false;
     }
 
     public BigDecimal getTotalOrderUnits(){
@@ -200,5 +203,25 @@ public class Order {
         changeStatus(OrderStatus.DELIVERED);
     }
 
+    public void setPaid(){
+        this.paid=true;
+    }
+    public boolean isPaid(){
+        return paid;
+    }
+    public void markAsUnpaid(){
+        this.paid=false;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return Objects.equals(id, order.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

@@ -3,33 +3,49 @@ package Consoles;
 import Builders.OrderBuilder;
 import Domain.*;
 import Exceptions.*;
-import Repositories.PromotionRepository;
+import OrderStatusObserver.subscribers.*;
+import Repositories.*;
 import Services.CustomerService;
 import Services.OrderService;
+import Services.ReportService;
 import Services.RestaurantService;
 import Utils.InputHelper;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CustomerConsole {
     private final InputHelper inputHelper;
+    private final PlatformConfig platformConfig;
     private final CustomerService customerService;
     private final RestaurantService restaurantService;
+    private final RestaurantRepository restaurantRepository;
     private final OrderService orderService;
+    private final OrderRepository orderRepository;
+    private final RiderRepository riderRepository;
     private final PromotionRepository promotionRepository;
-    private String customerId;
+    private final ReportService reportService;
+    private  String customerId;
 
-    public CustomerConsole(String customerId, InputHelper inputHelper, CustomerService customerService,
-                           RestaurantService restaurantService, OrderService orderService, PromotionRepository promotionRepository) {
+    private AuditLog auditLog;
+    public CustomerConsole(String customerId, InputHelper inputHelper, PlatformConfig platformConfig, CustomerService customerService,
+                           RestaurantService restaurantService, RestaurantRepository restaurantRepository, OrderService orderService, OrderRepository orderRepository, RiderRepository riderRepository, PromotionRepository promotionRepository, ReportService reportService, AuditLog auditLog) {
         this.customerId=customerId;
         this.inputHelper = inputHelper;
+        this.platformConfig = platformConfig;
         this.customerService=customerService;
         this.restaurantService=restaurantService;
+        this.restaurantRepository = restaurantRepository;
         this.orderService=orderService;
+        this.orderRepository = orderRepository;
+        this.riderRepository = riderRepository;
         this.promotionRepository = promotionRepository;
+        this.reportService = reportService;
+        this.auditLog=auditLog;
     }
 
     public void start() {
@@ -43,10 +59,10 @@ public class CustomerConsole {
                 case 2 -> searchRestaurants();
                 case 3 -> viewMenu();
                 case 4 -> placeOrder();
-//                case 5 -> payForOrder();
-//                case 6 -> trackOrder();
-//                case 7 -> cancelOrder();
-//                case 8 -> showOrderHistory();
+                case 5 -> payForOrder();
+                case 6 -> trackOrder();
+                case 7 -> cancelOrder();
+                case 8 -> showOrderHistory();
                 case 0 -> System.out.println("Ciao!");
                 default -> System.out.println("Invalid choice. Please try again.");
             }
@@ -56,6 +72,61 @@ public class CustomerConsole {
         }while(choice!=0);
     }
 
+    private void showOrderHistory() {
+        CustomerOrderHistoryReport report =
+                reportService.getCustomerOrderHistoryAndTotalSpent(customerId);
+
+        System.out.println("\n===== Order History =====");
+
+        List<Order> orders = report != null && report.orders() != null
+                ? report.orders()
+                : List.of();
+
+        if (orders.isEmpty()) {
+            System.out.println("No orders found.");
+        } else {
+            for (Order order : orders) {
+                if (order == null) {
+                    continue;
+                }
+
+                System.out.println(
+                        "Order ID: " + order.getId()
+                                + " | Restaurant: " + order.getRestaurantId()
+                                + " | Status: " + order.getOrderStatus()
+                                + " | Placed At: " + order.getPlacedAt()
+                                + " | Total: " +
+                                (order.getFinalPrice() != null
+                                        ? order.getFinalPrice().total() + " EGP"
+                                        : "N/A")
+                );
+            }
+        }
+
+        BigDecimal totalSpent = report != null && report.totalSpent() != null
+                ? report.totalSpent()
+                : BigDecimal.ZERO;
+
+        System.out.println("-------------------------");
+        System.out.println("Lifetime Total Spent: " + totalSpent + " EGP");
+    }
+    private void cancelOrder(){
+        String orderId=inputHelper.readString("Enter the order ID: ");
+        orderService.cancelOrder(orderId);
+        System.out.println("Canceled Successfully");
+    }
+
+    private void trackOrder(){
+        String orderId=inputHelper.readString("Enter the order ID: ");
+        Order order=orderService.trackOrder(orderId);
+        System.out.println("Status: "+order.getOrderStatus()+" , Elapsed time: "+ Duration.between(LocalDateTime.now(),order.getPlacedAt()));
+    }
+    private void payForOrder(){
+        String orderId=inputHelper.readString("Enter the order ID: ");
+        BigDecimal newBalance=orderService.payForOrder(orderId);
+        System.out.println("Order Paid Successfully.");
+        System.out.println("New wallet balance: "+newBalance+" EGP");
+    }
     private void placeOrder() {
         System.out.println("Enter order info");
 
@@ -78,7 +149,7 @@ public class CustomerConsole {
             choice = inputHelper.readInt("Enter address number:");
         } while (choice <= 0 || choice > customerAddresses.size());
 
-        Address deliveryAddress = customerAddresses.get(--choice);
+        Address deliveryAddress = customerAddresses.get((choice-1));
 
         List<MenuItem> menuItems = restaurantService.getMenu(restaurantId);
         List<OrderLine> lineItems = new ArrayList<>();
@@ -136,7 +207,13 @@ public class CustomerConsole {
                 .setPromotion(promotion);
 
         Order order=orderBuilder.build();
+        order.getEventPublisher().subscribe(new CustomerNotificationListener());
+        order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
+        order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository));
+        order.getEventPublisher().subscribe(new RiderDashboardListener(platformConfig,riderRepository));
+        order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderService.addOrder(order);
+        System.out.println("Order placed successfully");
     }
     private void viewCustomerAddresses(List<Address>addresses){
         for(int i=0;i<addresses.size();i++){

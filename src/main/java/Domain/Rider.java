@@ -73,6 +73,10 @@ public class Rider {
         activeOrder=order;
         updateAvailabilityStatus(false);
     }
+    public void cancelOrder(){
+        activeOrder=null;
+        updateAvailabilityStatus(true);
+    }
     public void completeDelivery(){
         if(activeOrder==null) {
             throw new IllegalStateException("No active order.");

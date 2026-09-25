@@ -125,12 +125,12 @@ public class ReportService {
 
     public CustomerOrderHistoryReport getCustomerOrderHistoryAndTotalSpent(String customerId){
       List<Order> customerOrders = orderRepository.getAllOrders().stream()
-                .filter(o->o.getOrderStatus()==OrderStatus.DELIVERED)
                 .filter(o->o.getCustomer().getId().equals(customerId))
-              .sorted(Comparator.comparing(Order::getPlacedAt).reversed())
+               .sorted(Comparator.comparing(Order::getPlacedAt).reversed())
                 .toList();
 
         BigDecimal totalSpent=customerOrders.stream()
+                .filter(Order::isPaid)
                 .map(o->o.getFinalPrice().total())
                 .reduce(BigDecimal.ZERO,BigDecimal::add);
 

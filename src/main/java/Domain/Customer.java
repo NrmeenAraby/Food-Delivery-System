@@ -1,6 +1,7 @@
 package Domain;
 
 import Exceptions.InsufficientWalletException;
+import Exceptions.PlatformException;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -104,9 +105,9 @@ public class Customer {
     }
     public void deductMoney(BigDecimal amount){
         if(amount.compareTo(BigDecimal.ZERO)<=0) {
-            throw new IllegalArgumentException("Amount must be positive.");
+            throw new PlatformException("Amount must be positive.");
         }
-        if(walletBalance.compareTo(amount)<=0){
+        if(walletBalance.compareTo(amount)<0){
             throw new InsufficientWalletException("Insufficient wallet balance");
         }
         walletBalance=walletBalance.subtract(amount);

@@ -33,4 +33,10 @@ public class OrderRepository {
     public void addReadyOrder(Order order){
         readyOrders.add(order);
     }
+    public void removeReadyOrder(String orderid){
+        Order order=orders.get(orderid);
+        if(order!=null) {
+            readyOrders.remove(order);
+        }
+    }
 }
