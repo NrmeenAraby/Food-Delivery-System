@@ -3,7 +3,6 @@ package Consoles;
 import Builders.OrderBuilder;
 import Domain.*;
 import Exceptions.*;
-import OrderStatusObserver.subscribers.*;
 import Repositories.*;
 import Services.CustomerService;
 import Services.OrderService;
@@ -20,32 +19,24 @@ import java.util.stream.Collectors;
 
 public class CustomerConsole {
     private final InputHelper inputHelper;
-    private final PlatformConfig platformConfig;
     private final CustomerService customerService;
     private final RestaurantService restaurantService;
-    private final RestaurantRepository restaurantRepository;
     private final OrderService orderService;
-    private final OrderRepository orderRepository;
-    private final RiderRepository riderRepository;
+
     private final PromotionRepository promotionRepository;
     private final ReportService reportService;
     private  String customerId;
 
-    private AuditLog auditLog;
-    public CustomerConsole(String customerId, InputHelper inputHelper, PlatformConfig platformConfig, CustomerService customerService,
-                           RestaurantService restaurantService, RestaurantRepository restaurantRepository, OrderService orderService, OrderRepository orderRepository, RiderRepository riderRepository, PromotionRepository promotionRepository, ReportService reportService, AuditLog auditLog) {
+    public CustomerConsole(String customerId, InputHelper inputHelper,  CustomerService customerService,
+                           RestaurantService restaurantService, OrderService orderService,
+                           PromotionRepository promotionRepository, ReportService reportService) {
         this.customerId=customerId;
         this.inputHelper = inputHelper;
-        this.platformConfig = platformConfig;
         this.customerService=customerService;
         this.restaurantService=restaurantService;
-        this.restaurantRepository = restaurantRepository;
         this.orderService=orderService;
-        this.orderRepository = orderRepository;
-        this.riderRepository = riderRepository;
         this.promotionRepository = promotionRepository;
         this.reportService = reportService;
-        this.auditLog=auditLog;
     }
 
     public void start() {
@@ -199,20 +190,8 @@ public class CustomerConsole {
                 throw new IllegalPromotionException("This promotion is expired.");
             }
         }
-        OrderBuilder orderBuilder=new OrderBuilder().setCustomer(customer)
-                .setRestaurantId(restaurantId)
-                .setDeliveryAddress(deliveryAddress)
-                .setLineItems(lineItems)
-                .setDistanceKm(distance)
-                .setPromotion(promotion);
-
-        Order order=orderBuilder.build();
-        order.getEventPublisher().subscribe(new CustomerNotificationListener());
-        order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
-        order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository));
-        order.getEventPublisher().subscribe(new RiderDashboardListener(platformConfig,riderRepository));
-        order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
-        orderService.addOrder(order);
+        orderService.placeOrder(customer, restaurantId,deliveryAddress,lineItems, distance,promotion);
+        customer.incrementOrderCount();
         System.out.println("Order placed successfully");
     }
     private void viewCustomerAddresses(List<Address>addresses){

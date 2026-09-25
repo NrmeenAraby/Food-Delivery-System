@@ -1,24 +1,33 @@
 package Services;
 
+import Builders.OrderBuilder;
 import Domain.*;
 import Exceptions.PlatformException;
 import Repositories.CustomerRepository;
 import Repositories.OrderRepository;
 
 import java.math.BigDecimal;
+import java.util.List;
+import OrderStatusObserver.subscribers.*;
+import Repositories.RestaurantRepository;
+import Repositories.RiderRepository;
 
 
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final CustomerRepository customerRepository;
+    private AuditLog auditLog;
+    private final RiderRepository riderRepository;
+    private final PlatformConfig platformConfig;
+    private final RestaurantRepository restaurantRepository;
 
-    public OrderService(OrderRepository orderRepository, CustomerRepository customerRepository) {
+
+    public OrderService(OrderRepository orderRepository, AuditLog auditLog, RiderRepository riderRepository,
+                        PlatformConfig platformConfig, RestaurantRepository restaurantRepository) {
         this.orderRepository = orderRepository;
-        this.customerRepository = customerRepository;
-
-    }
-    public void addOrder(Order order){
-        orderRepository.addOrder(order);
+        this.auditLog=auditLog;
+        this.riderRepository = riderRepository;
+        this.platformConfig = platformConfig;
+        this.restaurantRepository = restaurantRepository;
     }
     public BigDecimal payForOrder(String orderId){
         Order order=orderRepository.findById(orderId);
@@ -37,6 +46,29 @@ public class OrderService {
         customer.deductMoney(total);
         order.setPaid();
         return customer.getWalletBalance();
+    }
+    public void placeOrder(Customer customer, String restaurantId, Address deliveryAddress, List<OrderLine> lineItems,
+                           BigDecimal distance,Promotion promotion){
+        OrderBuilder orderBuilder=new OrderBuilder().setCustomer(customer)
+                .setRestaurantId(restaurantId)
+                .setDeliveryAddress(deliveryAddress)
+                .setDistanceKm(distance)
+                .setPromotion(promotion);
+
+        for(var item:lineItems){
+            orderBuilder.addLineItem(item.getMenuItem(),item.getQuantity());
+        }
+        Order order=orderBuilder.build();
+        for (OrderLine line : order.getLineItems()) {
+            line.getMenuItem().decreaseStock(line.getQuantity().doubleValue());
+        }
+        order.getEventPublisher().subscribe(new CustomerNotificationListener());
+        order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
+        order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository));
+        order.getEventPublisher().subscribe(new RiderDashboardListener(platformConfig,riderRepository));
+        order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
+        orderRepository.addOrder(order);
+
     }
     public Order trackOrder(String orderId){
         Order order=orderRepository.findById(orderId);

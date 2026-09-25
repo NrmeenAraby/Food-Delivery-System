@@ -1,5 +1,6 @@
 package Domain;
 
+import Exceptions.PlatformException;
 import Exceptions.StockShortageException;
 
 import java.math.BigDecimal;
@@ -57,6 +58,9 @@ public abstract class MenuItem {
     }
 
     public void decreaseStock(double quantity){
+        if(quantity<=0){
+            throw new PlatformException("Quantity must ne greater than zero.");
+        }
         if(!hasEnoughStock(quantity)){
             throw new StockShortageException("Current stock quantity is "+this.stockQuantity);
         }

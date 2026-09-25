@@ -1,10 +1,7 @@
 package Services;
 
 import Domain.*;
-import Repositories.CustomerOrderHistoryReport;
-import Repositories.OrderRepository;
-import Repositories.RestaurantRepository;
-import Repositories.RiderRepository;
+import Repositories.*;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -15,20 +12,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReportService {
-    private OrderRepository orderRepository;
-    private RestaurantRepository restaurantRepository;
-    private RiderRepository riderRepository;
+    private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
+    private final RiderRepository riderRepository;
+    private final CustomerRepository customerRepository;
 
-
-    public void setOrderRepository(OrderRepository orderRepository) {
+    public ReportService(OrderRepository orderRepository, RestaurantRepository restaurantRepository,
+                         RiderRepository riderRepository, CustomerRepository customerRepository) {
         this.orderRepository = orderRepository;
-    }
-
-    public void setRestaurantRepository(RestaurantRepository restaurantRepository) {
         this.restaurantRepository = restaurantRepository;
-    }
-    public void setRiderRepository(RiderRepository riderRepository) {
         this.riderRepository = riderRepository;
+        this.customerRepository = customerRepository;
     }
 
     public BigDecimal getTotalRevenue(LocalDate from, LocalDate to){
@@ -151,7 +145,7 @@ public class ReportService {
        Map<Customer,List<Order>> customerOrders = orderRepository.getAllOrders().stream()
                .collect(Collectors.groupingBy(Order::getCustomer));
 
-       return customerOrders.values().stream()
+       List<Customer>idleCustomersWithOrders= customerOrders.values().stream()
                .filter(orders -> orders.stream()
                        .map(Order::getPlacedAt)
                        .max(LocalDateTime::compareTo)
@@ -159,6 +153,13 @@ public class ReportService {
                        .orElse(true))
                .map(orders -> orders.get(0).getCustomer())
                .toList();
+        List<Customer>idleCustomersWithoutOrders= customerRepository.getAllCustomers().stream()
+                .filter(customer->customer.getOrderCount()==0)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        idleCustomersWithoutOrders.addAll(idleCustomersWithOrders);
+        return  idleCustomersWithoutOrders;
+
     }
 
 

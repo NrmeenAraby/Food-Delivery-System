@@ -15,6 +15,7 @@ public class Customer {
     private List<Address> addresses;
     private BigDecimal walletBalance;
     private int completedOrderCount;
+    private int orderCount;
     private static final int SILVER_TIER_ORDERS =10;
     private static final int GOLD_TIER_ORDERS =30;
     private Deque<SearchCriteria> lastSearches;
@@ -25,6 +26,7 @@ public class Customer {
         setPhoneNumber(phoneNumber);
         setWalletBalance(walletBalance);
         completedOrderCount=0;
+        orderCount=0;
     }
     public void addSearch(SearchCriteria search){
         if(lastSearches==null){
@@ -85,6 +87,12 @@ public class Customer {
     }
     public void incrementCompletedOrderCount(){
         completedOrderCount++;
+    }
+    public void incrementOrderCount(){
+        orderCount++;
+    }
+    public int getOrderCount(){
+        return completedOrderCount;
     }
     public LoyaltyTier getLoyaltyTier(){
         if(completedOrderCount>= GOLD_TIER_ORDERS){
