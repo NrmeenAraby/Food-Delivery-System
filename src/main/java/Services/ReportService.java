@@ -83,24 +83,20 @@ public class ReportService {
                 .filter(order->order.getOrderStatus()==OrderStatus.DELIVERED)
                 .collect(Collectors.groupingBy(Order::getRiderId));
 
-        return riderOrders.entrySet().stream()
+        return riderRepository.getAllRiders().stream()
                 .map(
-                        entry->{
-                            String riderId=entry.getKey();
-                            Rider rider=riderRepository.findById(riderId);
-                            List<Order> orders=entry.getValue();
-                            double avgDuration = orders.stream()
+                        rider -> {
+                            List<Order> orders=riderOrders.getOrDefault(rider.getId(), List.of());
+                            double avgDuration=orders.stream()
                                     .mapToLong(
-                                            o-> Duration.between(o.getAssignedAt(),o.getDeliveredAt()).getSeconds())
-                                    .average()
+                                        order->Duration.between(order.getAssignedAt(),order.getDeliveredAt()).getSeconds()
+                                    ).
+                                    average()
                                     .orElse(0);
-                            return new RiderDeliveryReport(
-                                   rider,orders.size()
-                                    ,Duration.ofSeconds((long)avgDuration)
-                            );
+                            return new RiderDeliveryReport(rider.getId(),orders,Duration.ofSeconds((long) avgDuration));
                         }
                 )
-                .sorted(Comparator.comparing(RiderDeliveryReport::completedDeliveries).reversed())
+                .sorted(Comparator.comparing(RiderDeliveryReport::getOrdersSize).reversed())
                 .toList();
 
     }

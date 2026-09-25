@@ -224,4 +224,16 @@ public class Order {
     public int hashCode() {
         return Objects.hash(id);
     }
+    @Override
+    public String toString() {
+        return "Order " + id +
+                " | Customer: " + customer.getName() +
+                " | Restaurant: " + restaurantId +
+                " | Delivery Address: " + deliveryAddress +
+                " | Place at: " + placedAt +
+                " | Assigned at: " + assignedAt +
+                " | Status: " + orderStatus +
+                " | Total: " + calculatePrice().total() + " EGP" +
+                " | Distance: " + distanceKm + " km";
+    }
 }

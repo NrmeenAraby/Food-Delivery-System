@@ -28,10 +28,6 @@ public class Rider {
         dispatchStrategy= DispatchStrategyFactory.createDispatchStrategy(vehicleType,maxRange,maxOrdersUnits,maxSpeed);
     }
 
-    public static int getNextId() {
-        return nextId;
-    }
-
     public String getId() {
         return id;
     }
@@ -55,6 +51,9 @@ public class Rider {
     public Order getActiveOrder() {
         return activeOrder;
     }
+    public boolean hasActiveOrder(){
+        return (activeOrder!=null);
+    }
 
     public int getCompletedDeliveriesCount() {
         return completedDeliveriesCount;
@@ -71,21 +70,18 @@ public class Rider {
             throw new RiderBusyException("Rider already has an active order");
         }
         activeOrder=order;
-        updateAvailabilityStatus(false);
     }
     public void cancelOrder(){
         activeOrder=null;
-        updateAvailabilityStatus(true);
     }
     public void completeDelivery(){
         if(activeOrder==null) {
             throw new IllegalStateException("No active order.");
         }
         activeOrder=null;
-        updateAvailabilityStatus(true);
     }
     public boolean canHandleOrder(Order order){
-        return  isAvailable() && dispatchStrategy.canAssign(order);
+        return  isAvailable() && !hasActiveOrder() && dispatchStrategy.canAssign(order);
     }
 
 }

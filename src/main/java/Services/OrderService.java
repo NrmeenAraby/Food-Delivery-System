@@ -10,6 +10,7 @@ import Repositories.OrderRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -35,6 +36,26 @@ public class OrderService {
         this.platformConfig = platformConfig;
         this.restaurantRepository = restaurantRepository;
     }
+    public boolean dispatchNextReadyOrder(Rider rider){
+        List<Order> temp=new ArrayList<>();
+        while(true){
+            Order order=orderRepository.removeNextReadyOrder();
+            if(order==null)
+                break;
+            if(rider.canHandleOrder(order)){
+                rider.assignOrder(order);
+                order.assignRider(rider.getId());
+
+                temp.forEach(orderRepository::addReadyOrder);
+
+                return true;
+            }
+            temp.add(order);
+        }
+        temp.forEach(orderRepository::addReadyOrder);
+        return false;
+    }
+
     public List<Order> viewTodayOrders(String restaurantId) {
         LocalDate today = LocalDate.now();
 

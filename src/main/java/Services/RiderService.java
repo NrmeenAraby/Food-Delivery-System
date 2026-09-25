@@ -1,49 +1,84 @@
 package Services;
 
 import Domain.Order;
+import Domain.OrderStatus;
 import Domain.Rider;
-import Repositories.OrderRepository;
+import Exceptions.PlatformException;
+import Exceptions.RiderBusyException;
 import Repositories.RiderRepository;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class RiderService {
     private final RiderRepository riderRepository;
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
+    private final ReportService reportService;
 
-    public RiderService(RiderRepository riderRepository, OrderRepository orderRepository) {
+    public RiderService(RiderRepository riderRepository, OrderService orderService, ReportService reportService) {
         this.riderRepository = riderRepository;
-        this.orderRepository = orderRepository;
-    }
+        this.orderService = orderService;
+        this.reportService = reportService;
 
+    }
+    public RiderDeliveryReport viewStatistics(String riderId){
+        getRider(riderId); // throws if no rider
+        return reportService.getRiderCompleteDeliveriesAndAvgDuration().stream()
+                .filter(report->report.riderId().equals(riderId))
+                .findFirst()
+                .orElseThrow(()->new PlatformException("No delivery statistics found for this rider."));
+    }
     public void markDelivered(String riderId){
-        Rider rider=riderRepository.findById(riderId);
+        Rider rider=getRider(riderId);
+        if (!rider.hasActiveOrder()) {
+            throw new PlatformException("No assigned order for rider " + riderId + ".");
+        }
         Order order=rider.getActiveOrder();
         rider.completeDelivery();
         order.markDelivered();
-        dispatchNextReadyOrder(rider);
+        orderService.dispatchNextReadyOrder(rider);
+    }
+    public void markPickedUp(String riderId){
+        Rider rider=getRider(riderId);
+        if (!rider.hasActiveOrder()) {
+            throw new PlatformException("No assigned order for rider " + riderId + ".");
+        }
+        rider.getActiveOrder().changeStatus(OrderStatus.OUT_FOR_DELIVERY);
+        System.out.println("Picked Successfully");
+    }
+    public Order viewAssignedOrder(String riderId){
+        Rider rider=getRider(riderId);
+        return rider.getActiveOrder();
+    }
+    public void goOffDuty(String riderId){
+        Rider rider=getRider(riderId);
+        if(!rider.isAvailable()){
+            System.out.println("Rider "+riderId +" is already off.");
+            return;
+        }
+        if(rider.hasActiveOrder()){
+            throw new RiderBusyException("Can't right now. Rider has an assigned order.");
+        }
+        rider.updateAvailabilityStatus(false);
+        System.out.println("Rider: "+riderId+" is now off.");
+    }
+    public void goOnDuty(String riderId){
+        Rider rider=getRider(riderId);
+        if(rider.isAvailable()){
+            System.out.println("Already available");
+            orderService.dispatchNextReadyOrder(rider);
+            return;
+        }
+        rider.updateAvailabilityStatus(true);
+        orderService.dispatchNextReadyOrder(rider);
+        System.out.println("Rider: "+riderId+" is now ready for assignment.");
     }
 
-    private boolean dispatchNextReadyOrder(Rider rider){
-        List<Order> temp=new ArrayList<>();
-        while(true){
-            Order order=orderRepository.removeNextReadyOrder();
-            if(order==null)
-                break;
-            if(rider.canHandleOrder(order)){
-                rider.assignOrder(order);
-                order.assignRider(rider.getId());
 
-                temp.forEach(orderRepository::addReadyOrder);
 
-                return true;
-            }
-            temp.add(order);
+    private Rider getRider(String riderId){
+        Rider rider=riderRepository.findById(riderId);
+        if(rider==null){
+            throw new PlatformException("No rider with this ID.");
         }
-        temp.forEach(orderRepository::addReadyOrder);
-
-        return false;
+        return rider;
     }
 
 
