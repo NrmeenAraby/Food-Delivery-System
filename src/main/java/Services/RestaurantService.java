@@ -1,20 +1,28 @@
 package Services;
 
-import Domain.MenuItem;
-import Domain.Restaurant;
-import Domain.SearchCriteria;
-import Exceptions.RestaurantClosedException;
+import Domain.*;
 import Exceptions.RestaurantNotFoundException;
 import Filters.RestaurantFilter;
+import Repositories.OrderRepository;
 import Repositories.RestaurantRepository;
 
 import java.util.List;
 
 public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
+    private final OrderRepository orderRepository;
 
-    public RestaurantService(RestaurantRepository restaurantRepository) {
+    public RestaurantService(RestaurantRepository restaurantRepository, OrderRepository orderRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.orderRepository = orderRepository;
+    }
+
+    public List<Order> getOrdersWithSpecificStatus(String restaurantId,OrderStatus orderStatus){
+       return orderRepository.getAllOrders().stream()
+               .filter(order -> order.getRestaurantId().equals(restaurantId))
+               .filter(order -> order.getOrderStatus().equals(orderStatus))
+                .toList();
+
     }
 
     public List<Restaurant> searchByCriteria(SearchCriteria searchCriteria){
@@ -52,7 +60,7 @@ public class RestaurantService {
                     "No restaurant found with this ID: " + restaurantId
             );
         }
-        return  restaurant.getMenu().getItems();
+        return restaurant.getMenu().getItems();
     }
     public List<Restaurant> freeTextSearch(String freeTxt){
         String keyword=freeTxt.toUpperCase();

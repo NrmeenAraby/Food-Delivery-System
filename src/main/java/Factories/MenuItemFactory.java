@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class MenuItemFactory {
-    public MenuItem createMenuItem(MenuItemType menuItemType, String name, ItemCategory itemCategory, int preparationTimeMinutes, double stockQuantity
+    public static MenuItem createMenuItem(MenuItemType menuItemType, String name,
+             ItemCategory itemCategory, int preparationTimeMinutes, double stockQuantity
     , BigDecimal price, BigDecimal discount, List<MenuItem>comboItems){
         return switch (menuItemType){
             case STANDARD -> new StandardItem(name,itemCategory,preparationTimeMinutes,stockQuantity,price);

@@ -13,6 +13,14 @@ public class ComboItem extends MenuItem{
 
     public ComboItem(String name, ItemCategory itemCategory, int preparationTimeMinutes,double stockQuantity, BigDecimal discount) {
         super(name,itemCategory, preparationTimeMinutes,stockQuantity);
+
+        if (discount.compareTo(BigDecimal.ZERO) < 0 ||
+                discount.compareTo(BigDecimal.ONE) > 0) {
+            throw new InvalidComboItemException(
+                    "Discount must be between 0 and 1."
+            );
+        }
+
         this.discount=discount;
     }
 

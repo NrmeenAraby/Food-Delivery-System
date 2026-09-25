@@ -5,5 +5,6 @@ public enum ItemCategory {
     MAIN_COURSES,
     SIDES,
     DESSERTS,
-    DRINKS
+    DRINKS,
+    COMBO
 }

@@ -26,10 +26,10 @@ public abstract class MenuItem {
     }
 
     public void setStockQuantity(double stockQuantity) {
-        if(stockQuantity>0)
+        if(stockQuantity>=0)
            this.stockQuantity = stockQuantity;
         else
-            throw new IllegalArgumentException("Cant add item with a stock quantity less than or equal 0");
+            throw new PlatformException("Stock quantity cannot be negative.");
     }
 
 
@@ -51,6 +51,9 @@ public abstract class MenuItem {
 
     public boolean isAvailable() {
         return availabilityFlag && stockQuantity>0;
+    }
+    public boolean getAvailabilityFlag(){
+        return availabilityFlag;
     }
 
     public boolean hasEnoughStock(double quantity){

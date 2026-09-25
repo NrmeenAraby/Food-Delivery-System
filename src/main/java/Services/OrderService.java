@@ -2,12 +2,18 @@ package Services;
 
 import Builders.OrderBuilder;
 import Domain.*;
+import Exceptions.InvalidOrderTransitionException;
 import Exceptions.PlatformException;
 import Repositories.CustomerRepository;
 import Repositories.OrderRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import OrderStatusObserver.subscribers.*;
 import Repositories.RestaurantRepository;
 import Repositories.RiderRepository;
@@ -28,6 +34,72 @@ public class OrderService {
         this.riderRepository = riderRepository;
         this.platformConfig = platformConfig;
         this.restaurantRepository = restaurantRepository;
+    }
+    public List<Order> viewTodayOrders(String restaurantId) {
+        LocalDate today = LocalDate.now();
+
+        return orderRepository.getAllOrders().stream()
+                .filter(order -> order.getRestaurantId().equals(restaurantId))
+                .filter(order -> order.getPlacedAt().toLocalDate().equals(today))
+                .toList();
+
+    }
+    public BigDecimal viewTodayRevenue(String restaurantId) {
+        LocalDate today = LocalDate.now();
+        return orderRepository.getAllOrders().stream()
+                .filter(order -> order.getRestaurantId().equals(restaurantId))
+                .filter(Order::isPaid)
+                .filter(order -> order.getPlacedAt().toLocalDate().equals(today))
+                .map(order -> order.getFinalPrice().total())
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
+    }
+    public void markReady(String orderId,String restaurantId){
+        Order order=orderRepository.findById(orderId);
+        if(order==null){
+            throw  new PlatformException("No order with this ID.");
+        }
+        if(!order.getRestaurantId().equals(restaurantId)){
+            throw new PlatformException("This order doesn't belong to this restaurant");
+        }
+        order.changeStatus(OrderStatus.READY);
+
+    }
+    public void markPreparing(String orderId,String restaurantId){
+        Order order=orderRepository.findById(orderId);
+        if(order==null){
+            throw  new PlatformException("No order with this ID.");
+        }
+        if(!order.getRestaurantId().equals(restaurantId)){
+            throw new PlatformException("This order doesn't belong to this restaurant");
+        }
+        order.changeStatus(OrderStatus.PREPARING);
+
+    }
+    public void rejectPendingOrder(String orderId,String restaurantId){
+        Order order=orderRepository.findById(orderId);
+        if(order==null){
+            throw  new PlatformException("No order with this ID.");
+        }
+        if(!order.getRestaurantId().equals(restaurantId)){
+            throw new PlatformException("This order doesn't belong to this restaurant");
+        }
+        if(order.getOrderStatus()!=OrderStatus.PLACED){
+            throw new InvalidOrderTransitionException("This order isn't pending");
+        }
+        order.changeStatus(OrderStatus.CANCELLED);
+    }
+    public void acceptPendingOrder(String orderId,String restaurantId){
+        Order order=orderRepository.findById(orderId);
+        if(order==null){
+            throw  new PlatformException("No order with this ID.");
+        }
+        if(!order.getRestaurantId().equals(restaurantId)){
+            throw new PlatformException("This order doesn't belong to this restaurant");
+        }
+        if(order.getOrderStatus()!=OrderStatus.PLACED){
+            throw new InvalidOrderTransitionException("Can't put this order status as accepted");
+        }
+        order.changeStatus(OrderStatus.ACCEPTED);
     }
     public BigDecimal payForOrder(String orderId){
         Order order=orderRepository.findById(orderId);
