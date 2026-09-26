@@ -17,6 +17,9 @@ public abstract class MenuItem {
     private double stockQuantity;
 
     public MenuItem(String name, ItemCategory itemCategory, int preparationTimeMinutes,double stockQuantity) {
+        if(name.isBlank()){
+            throw new PlatformException("Name cant be empty");
+        }
         id="I-"+nextId.getAndIncrement();
         this.name = name;
         this.itemCategory = itemCategory;

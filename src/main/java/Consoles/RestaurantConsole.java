@@ -26,16 +26,20 @@ public class RestaurantConsole {
     }
 
     public void start() {
-        this.restaurantId=inputHelper.readString("Restaurant ID: ");
+        this.restaurantId = inputHelper.readString("Restaurant ID: ");
+
+        if (restaurantService.findById(restaurantId) == null) {
+            System.out.println("No restaurant with this ID");
+            return;
+        }
 
         int choice;
+
         do {
-            if(restaurantService.findById(restaurantId)==null){
-                throw new PlatformException("No restaurant with this ID");
-            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
-            try{
+
+            try {
                 switch (choice) {
                     case 1 -> viewPendingOrders();
                     case 2 -> acceptPendingOrder();
@@ -52,11 +56,14 @@ public class RestaurantConsole {
                     case 0 -> System.out.println("Ciao!");
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
-            }catch(PlatformException e){
-                System.out.println(e.getMessage());
+
+            } catch (PlatformException e) {
+                System.out.println("Error: " + e.getMessage());
             }
-        }while(choice!=0);
+
+        } while (choice != 0);
     }
+
     private void viewTodayOrdersAndRevenue(){
        List<Order>orders= orderService.viewTodayOrders(restaurantId);
        BigDecimal revenue=orderService.viewTodayRevenue(restaurantId);

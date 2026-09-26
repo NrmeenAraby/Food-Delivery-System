@@ -1,6 +1,7 @@
 package Builders;
 
 import Domain.*;
+import Exceptions.PlatformException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class OrderBuilder {
     }
 
     public OrderBuilder setLineItems(List<OrderLine> lineItems) {
-        this.lineItems = lineItems;
+        this.lineItems = new ArrayList<>(lineItems);
         return this;
     }
 
@@ -60,7 +61,7 @@ public class OrderBuilder {
                 || deliveryAddress == null
                 || lineItems.isEmpty()
                 || distanceKm == null) {
-            throw new IllegalStateException("Missing required order information");
+            throw new PlatformException("Missing required order information");
         }
         return new Order(customer,restaurantId,deliveryAddress, lineItems,promotion,distanceKm);
     }

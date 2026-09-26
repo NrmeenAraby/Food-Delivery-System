@@ -94,7 +94,7 @@ public class Order {
         this.orderStatus=newStatus;
         eventPublisher.notifyListeners(this);
     }
-    private boolean isValidTransition(OrderStatus newStatus){
+    public boolean isValidTransition(OrderStatus newStatus){
         return switch (orderStatus){
             case PLACED -> newStatus==OrderStatus.ACCEPTED
                     || newStatus==OrderStatus.CANCELLED;
@@ -195,13 +195,19 @@ public class Order {
         if(this.riderId!=null){
             throw new PlatformException("Order already assigned to a rider");
         }
-        changeStatus(OrderStatus.ASSIGNED);
+        if(!isValidTransition(OrderStatus.ASSIGNED)){
+            throw new InvalidOrderTransitionException("Cannot change status from " + orderStatus + " to " +OrderStatus.ASSIGNED.name() );
+        }
         this.riderId = riderId;
         this.assignedAt=LocalDateTime.now();
+        changeStatus(OrderStatus.ASSIGNED);
     }
     public void markDelivered(){
-        changeStatus(OrderStatus.DELIVERED);
+        if(!isValidTransition(OrderStatus.DELIVERED)){
+            throw new InvalidOrderTransitionException("Cannot change status from " + orderStatus + " to " + OrderStatus.DELIVERED.name());
+        }
         this.deliveredAt=LocalDateTime.now();
+        changeStatus(OrderStatus.DELIVERED);
     }
 
     public void setPaid(){

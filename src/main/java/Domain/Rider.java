@@ -1,10 +1,12 @@
 package Domain;
 
 import DispatchRiderStrategies.DispatchStrategy;
+import Exceptions.PlatformException;
 import Exceptions.RiderBusyException;
 import Factories.DispatchStrategyFactory;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class Rider {
     private static int nextId = 1;
@@ -19,6 +21,12 @@ public class Rider {
 
     public Rider(String name, VehicleType vehicleType, String district,
                  BigDecimal maxRange,BigDecimal maxOrdersUnits, BigDecimal maxSpeed) {
+        if(name.isBlank()){
+            throw new PlatformException("Name cant be empty");
+        }
+        if(district.isBlank()){
+            throw new PlatformException("District cant be empty");
+        }
         id="RD-"+Integer.toString(nextId++);
         this.name = name;
         this.vehicleType = vehicleType;
@@ -76,7 +84,7 @@ public class Rider {
     }
     public void completeDelivery(){
         if(activeOrder==null) {
-            throw new IllegalStateException("No active order.");
+            throw new PlatformException("No active order.");
         }
         activeOrder=null;
     }
@@ -84,4 +92,16 @@ public class Rider {
         return  isAvailable() && !hasActiveOrder() && dispatchStrategy.canAssign(order);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rider rider = (Rider) o;
+        return Objects.equals(id, rider.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

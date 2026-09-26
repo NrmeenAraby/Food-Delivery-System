@@ -16,15 +16,19 @@ public class RiderConsole {
     }
 
     public void start() {
-        this.riderId=inputHelper.readString("Rider ID: ");
+        this.riderId = inputHelper.readString("Rider ID: ");
+
+        if (riderService.findById(riderId) == null) {
+            System.out.println("No rider with this ID.");
+            return;
+        }
 
         int choice;
+
         do {
-            if(riderService.findById(riderId)==null){
-                throw new PlatformException("No rider with this ID.");
-            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
+
             try {
                 switch (choice) {
                     case 1 -> goOnDuty();
@@ -36,13 +40,13 @@ public class RiderConsole {
                     case 0 -> System.out.println("Ciao!");
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
+
             } catch (PlatformException e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error: " + e.getMessage());
             }
 
         } while (choice != 0);
-    }
-    private void viewStatistics() {
+    }    private void viewStatistics() {
         RiderDeliveryReport report = riderService.viewStatistics(riderId);
         System.out.println("\n===== My Delivery Statistics =====");
         System.out.println("Completed Deliveries      : " + report.getOrdersSize());

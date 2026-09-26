@@ -42,6 +42,7 @@ public class RestaurantService {
         restaurantRepository.removeRestaurant(restaurantId);
     }
     public void addRestaurant(String name, String district, double avgRating, Set<CuisineCategory>cuisineCategories){
+
         if(cuisineCategories.isEmpty()){
             throw new PlatformException("Restaurant must have at least one cuisine.");
         }

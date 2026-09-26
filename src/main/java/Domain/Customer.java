@@ -20,6 +20,12 @@ public class Customer {
     private static final int GOLD_TIER_ORDERS =30;
     private Deque<SearchCriteria> lastSearches;
     public Customer(String name, String phoneNumber, BigDecimal walletBalance) {
+        if(name.isBlank()){
+            throw new PlatformException("Name cant be empty");
+        }
+        if(phoneNumber.isBlank()){
+            throw new PlatformException("District cant be empty");
+        }
         id="C-"+nextId.getAndIncrement();
         this.name = name;
         addresses=new ArrayList<>();
@@ -53,6 +59,13 @@ public class Customer {
     }
 
     public void addAddress(Address address){
+        if (address == null) {
+            throw new PlatformException("Address cannot be null.");
+        }
+
+        if (address.district() == null || address.district().isBlank()) {
+            throw new PlatformException("District cannot be empty.");
+        }
         addresses.add(address);
     }
     public void removeAddress(Address address){
@@ -121,7 +134,7 @@ public class Customer {
         walletBalance=walletBalance.subtract(amount);
     }
     public boolean isFirstTimeCustomer(){
-        return completedOrderCount==0;
+        return orderCount==0;
     }
 
     @Override

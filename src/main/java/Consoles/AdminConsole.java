@@ -11,9 +11,7 @@ import Utils.InputHelper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AdminConsole {
     private final InputHelper inputHelper;
@@ -23,7 +21,9 @@ public class AdminConsole {
     private final PromotionService promotionService;
     private final ReportService reportService;
     private final AuditLog auditLog;
-    public AdminConsole(InputHelper inputHelper, RestaurantService restaurantService, CustomerService customerService, RiderService riderService, PromotionService promotionService, ReportService reportService, AuditLog auditLog) {
+    public AdminConsole(InputHelper inputHelper, RestaurantService restaurantService, CustomerService customerService,
+                        RiderService riderService, PromotionService promotionService,
+                        ReportService reportService, AuditLog auditLog) {
         this.inputHelper = inputHelper;
         this.restaurantService = restaurantService;
         this.customerService = customerService;
@@ -193,8 +193,25 @@ public class AdminConsole {
         String name=inputHelper.readString("Name: ");
         String phoneNumber=inputHelper.readString("Phone Number: ");
         BigDecimal walletBalance=inputHelper.readBigDecimal("Wallet Balance: ");
-        customerService.addCustomer(name,phoneNumber,walletBalance);
+        List<Address>customerAddresses=new ArrayList<>();
+
+        System.out.println("\nEnter the customer's address");
+        customerAddresses.add(readAddress());
+        while (inputHelper.readYesNo("Add another address?")) {
+
+            customerAddresses.add(readAddress());
+        }
+        customerService.addCustomer(name,phoneNumber,walletBalance,customerAddresses);
         System.out.println("Customer added successfully.");
+    }
+    private Address readAddress(){
+        String district = inputHelper.readString("District: ");
+        String details = inputHelper.readString("Address details: ");
+
+        if (district.isBlank()) {
+            throw new PlatformException("District cannot be empty.");
+        }
+        return new Address(district,details);
     }
 
     private void removeRestaurant(){

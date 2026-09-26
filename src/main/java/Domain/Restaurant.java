@@ -1,6 +1,9 @@
 package Domain;
 
+import Exceptions.PlatformException;
+
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,6 +19,12 @@ public class Restaurant {
     private int completedOrders;
 
     public Restaurant(String name,String district, double avgRating){
+        if(name.isBlank()){
+            throw new PlatformException("Name cant be empty");
+        }
+        if(district.isBlank()){
+            throw new PlatformException("District cant be empty");
+        }
         id="RS-"+nextId.getAndIncrement();
         this.name=name;
         this .district=district;
@@ -73,6 +82,7 @@ public class Restaurant {
         if(rating<0 || rating>5){
             throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
+        this.avgRating=rating;
     }
     public double getAvgRating(){
         return avgRating;
@@ -81,5 +91,16 @@ public class Restaurant {
         this.status=status;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Restaurant that = (Restaurant) o;
+        return Objects.equals(id, that.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

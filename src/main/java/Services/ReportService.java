@@ -101,11 +101,16 @@ public class ReportService {
 
     }
     public Optional<MenuItem> getMostFrequentlyMenuItem(){
-        Map<MenuItem,Long> menuItems=orderRepository.getAllOrders().stream()
+        Map<MenuItem,BigDecimal> menuItems=orderRepository.getAllOrders().stream()
                 .flatMap(o->o.getLineItems().stream())
                 .collect(Collectors.groupingBy(
                         OrderLine::getMenuItem
-                ,Collectors.counting()));
+                ,Collectors.reducing(
+                                BigDecimal.ZERO,
+                                OrderLine::getQuantity,
+                                BigDecimal::add
+                        )
+                ));
 
         return  menuItems.entrySet().stream()
                 .max(Map.Entry.comparingByValue())

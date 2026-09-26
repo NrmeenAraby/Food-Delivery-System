@@ -38,34 +38,54 @@ public class CustomerConsole {
     }
 
     public void start() {
-        this.customerId=inputHelper.readString("Customer ID: ");
+
+        // Login
+        this.customerId = inputHelper.readString("Customer ID: ");
+
+        if (customerService.findById(customerId) == null) {
+            System.out.println("No customer with this ID.");
+            return;
+        }
 
         int choice;
+
         do {
-            if(customerService.findById(customerId)==null){
-                throw new PlatformException("No customer with this ID");
-            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
-            try{
-            switch (choice) {
-                case 1 -> browseRestaurants();
-                case 2 -> searchRestaurants();
-                case 3 -> viewMenu();
-                case 4 -> placeOrder();
-                case 5 -> payForOrder();
-                case 6 -> trackOrder();
-                case 7 -> cancelOrder();
-                case 8 -> showOrderHistory();
-                case 0 -> System.out.println("Ciao!");
-                default -> System.out.println("Invalid choice. Please try again.");
+
+            try {
+                switch (choice) {
+                    case 1 -> browseRestaurants();
+                    case 2 -> searchRestaurants();
+                    case 3 -> viewMenu();
+                    case 4 -> placeOrder();
+                    case 5 -> payForOrder();
+                    case 6 -> trackOrder();
+                    case 7 -> cancelOrder();
+                    case 8 -> showOrderHistory();
+                    case 9 -> addAddress();
+                    case 0 -> System.out.println("Ciao!");
+                    default -> System.out.println("Invalid choice. Please try again.");
+                }
+
+            } catch (PlatformException e) {
+                System.out.println("Error: " + e.getMessage());
             }
-        }catch(PlatformException e){
-                System.out.println(e.getMessage());
-            }
-        }while(choice!=0);
+
+        } while (choice != 0);
     }
 
+    private void addAddress() {
+        String district = inputHelper.readString("District: ");
+        String details = inputHelper.readString("Address details: ");
+
+        if (district.isBlank()) {
+            System.out.println("District cannot be empty.");
+            return;
+        }
+        customerService.findById(customerId).addAddress(new Address(district, details));
+        System.out.println("Address added successfully.");
+    }
     private void showOrderHistory() {
         CustomerOrderHistoryReport report =
                 reportService.getCustomerOrderHistoryAndTotalSpent(customerId);
@@ -106,18 +126,18 @@ public class CustomerConsole {
     }
     private void cancelOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(customerId,orderId);
         System.out.println("Canceled Successfully");
     }
 
     private void trackOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
-        Order order=orderService.trackOrder(orderId);
+        Order order=orderService.trackOrder(customerId,orderId);
         System.out.println("Status: "+order.getOrderStatus()+" , Elapsed time: "+ Duration.between(order.getPlacedAt(),LocalDateTime.now()));
     }
     private void payForOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
-        BigDecimal newBalance=orderService.payForOrder(orderId);
+        BigDecimal newBalance=orderService.payForOrder(customerId,orderId);
         System.out.println("Order Paid Successfully.");
         System.out.println("New wallet balance: "+newBalance+" EGP");
     }
@@ -130,6 +150,10 @@ public class CustomerConsole {
 
         System.out.println("Choose delivery address:");
         List<Address> customerAddresses = customer.getAddresses();
+        if (customerAddresses.isEmpty()) {
+            System.out.println("You have no saved addresses. Please add an address first.");
+            return;
+        }
         viewCustomerAddresses(customerAddresses);
         int choice;
         do {
@@ -155,13 +179,16 @@ public class CustomerConsole {
                 continue;
             }
 
-            double quantity = inputHelper.readDouble("Quantity: ");
-            while (quantity <= 0.0) {
+            BigDecimal quantity = inputHelper.readBigDecimal("Quantity: ");
+            while (quantity.compareTo(BigDecimal.ZERO) <= 0) {
                 System.out.println("Quantity must be greater than zero.");
-                quantity = inputHelper.readDouble("Quantity: ");
+                quantity = inputHelper.readBigDecimal("Quantity: ");
             }
 
-            lineItems.add(new OrderLine(pickedMenuItem, BigDecimal.valueOf(quantity)));
+            lineItems.add(new OrderLine(pickedMenuItem, quantity));
+        }
+        if (lineItems.isEmpty()) {
+            throw new PlatformException("Order must contain at least one item.");
         }
         BigDecimal distance = inputHelper.readBigDecimal("Enter the estimated distance: ");
         while (distance.compareTo(BigDecimal.ZERO) <= 0) {
@@ -325,6 +352,7 @@ public class CustomerConsole {
         System.out.println("6. Track Order");
         System.out.println("7. Cancel Order");
         System.out.println("8. Order History");
+        System.out.println("9. Add Address");
         System.out.println("0. Back");
     }
 }

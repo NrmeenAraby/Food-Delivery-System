@@ -2,9 +2,7 @@ package Services;
 
 import Builders.OrderBuilder;
 import Domain.*;
-import Exceptions.InvalidOrderTransitionException;
-import Exceptions.PlatformException;
-import Exceptions.RestaurantClosedException;
+import Exceptions.*;
 import Repositories.CustomerRepository;
 import Repositories.OrderRepository;
 
@@ -96,7 +94,6 @@ public class OrderService {
             throw new PlatformException("This order doesn't belong to this restaurant");
         }
         order.changeStatus(OrderStatus.PREPARING);
-
     }
     public void rejectPendingOrder(String orderId,String restaurantId){
         Order order=orderRepository.findById(orderId);
@@ -124,10 +121,13 @@ public class OrderService {
         }
         order.changeStatus(OrderStatus.ACCEPTED);
     }
-    public BigDecimal payForOrder(String orderId){
+    public BigDecimal payForOrder(String customerId,String orderId){
         Order order=orderRepository.findById(orderId);
         if(order==null){
             throw  new PlatformException("No order with this ID.");
+        }
+        if(!order.getCustomer().getId().equals(customerId)){
+           throw new PlatformException("This order doesn't belong to this customer");
         }
         if(order.getOrderStatus()==OrderStatus.CANCELLED){
             throw new PlatformException("Cant pay for cancelled order.");
@@ -136,6 +136,9 @@ public class OrderService {
             throw new PlatformException("Order is paid already.");
         }
         Customer customer=order.getCustomer();
+        if (order.getFinalPrice() == null) {
+            throw new PlatformException("Order has not been priced.");
+        }
         customer.deductMoney(order.getFinalPrice().total());
         order.setPaid();
         return customer.getWalletBalance();
@@ -150,6 +153,9 @@ public class OrderService {
         if (!restaurant.isOpen()) {
             throw new RestaurantClosedException("This restaurant is closed.");
         }
+        if (!customer.getAddresses().contains(deliveryAddress)) {
+            throw new PlatformException("Delivery address does not belong to customer.");
+        }
         OrderBuilder orderBuilder=new OrderBuilder().setCustomer(customer)
                 .setRestaurantId(restaurantId)
                 .setDeliveryAddress(deliveryAddress)
@@ -162,12 +168,15 @@ public class OrderService {
         Order order=orderBuilder.build();
         order.calculatePrice();
         for (OrderLine line : order.getLineItems()) {
+            if (restaurant.getMenu().findById(line.getMenuItem().getId()) == null) {
+                throw new UnavailableItemException("Item does not belong to this restaurant: " + line.getMenuItem().getName());
+            }
             if (!line.getMenuItem().isAvailable()) {
-                throw new PlatformException("Item is not available: " + line.getMenuItem().getName());
+                throw new UnavailableItemException("Item is not available: " + line.getMenuItem().getName());
             }
 
             if (!line.getMenuItem().hasEnoughStock(line.getQuantity().doubleValue())) {
-                throw new PlatformException("Insufficient stock for: " + line.getMenuItem().getName());
+                throw new StockShortageException("Insufficient stock for: " + line.getMenuItem().getName());
             }
         }
         for (OrderLine line : order.getLineItems()) {
@@ -181,23 +190,33 @@ public class OrderService {
         orderRepository.addOrder(order);
         customer.incrementOrderCount();
     }
-    public Order trackOrder(String orderId){
+    public Order trackOrder(String customerId,String orderId){
         Order order=orderRepository.findById(orderId);
         if(order==null) {
             throw new PlatformException("No order with this ID");
         }
+        if(!order.getCustomer().getId().equals(customerId)){
+            throw new PlatformException("This order doesn't belong to this customer");
+        }
         return order;
     }
-    public void cancelOrder(String orderId){
+    public void cancelOrder(String customerId,String orderId){
         Order order=orderRepository.findById(orderId);
         if(order==null){
             throw new PlatformException("No order with this ID");
+        }
+        if(!order.getCustomer().getId().equals(customerId)){
+            throw new PlatformException("This order doesn't belong to this customer");
         }
         OrderStatus orderStatus=order.getOrderStatus();
         if(orderStatus==OrderStatus.CANCELLED){
             System.out.println("It is already cancelled before.");
             return;
         }
+        if(!order.isValidTransition(OrderStatus.CANCELLED)){
+            throw new PlatformException("This order cant be cancelled.");
+        }
+
         if(orderStatus==OrderStatus.READY){
             orderRepository.removeReadyOrder(orderId);
         }
