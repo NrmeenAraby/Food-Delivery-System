@@ -18,8 +18,7 @@ public class RestaurantConsole {
     private final OrderService orderService;
     private final MenuItemService menuItemService;
 
-    public RestaurantConsole(String restaurantId, InputHelper inputHelper, RestaurantService restaurantService, OrderService orderService, MenuItemService menuItemService) {
-        this.restaurantId = restaurantId;
+    public RestaurantConsole(InputHelper inputHelper, RestaurantService restaurantService, OrderService orderService, MenuItemService menuItemService) {
         this.inputHelper = inputHelper;
         this.restaurantService = restaurantService;
         this.orderService = orderService;
@@ -27,8 +26,13 @@ public class RestaurantConsole {
     }
 
     public void start() {
+        this.restaurantId=inputHelper.readString("Restaurant ID: ");
+
         int choice;
         do {
+            if(restaurantService.findById(restaurantId)==null){
+                throw new PlatformException("No restaurant with this ID");
+            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
             try{

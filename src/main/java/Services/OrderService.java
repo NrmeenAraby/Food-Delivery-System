@@ -24,16 +24,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private AuditLog auditLog;
     private final RiderRepository riderRepository;
-    private final PlatformConfig platformConfig;
     private final RestaurantRepository restaurantRepository;
 
 
     public OrderService(OrderRepository orderRepository, AuditLog auditLog, RiderRepository riderRepository,
-                        PlatformConfig platformConfig, RestaurantRepository restaurantRepository) {
+                      RestaurantRepository restaurantRepository) {
         this.orderRepository = orderRepository;
         this.auditLog=auditLog;
         this.riderRepository = riderRepository;
-        this.platformConfig = platformConfig;
         this.restaurantRepository = restaurantRepository;
     }
     public int getTotalNumberOfOrders(){
@@ -161,7 +159,7 @@ public class OrderService {
         order.getEventPublisher().subscribe(new CustomerNotificationListener());
         order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
         order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository));
-        order.getEventPublisher().subscribe(new RiderDashboardListener(platformConfig,riderRepository));
+        order.getEventPublisher().subscribe(new RiderDashboardListener(PlatformConfig.getInstance(),riderRepository));
         order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderRepository.addOrder(order);
 

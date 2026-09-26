@@ -92,4 +92,5 @@ public class RestaurantService {
     public Restaurant findById(String restaurantId){
         return  restaurantRepository.findById(restaurantId);
     }
+
 }

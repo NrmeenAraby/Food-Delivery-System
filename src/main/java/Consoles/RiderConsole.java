@@ -6,19 +6,23 @@ import Services.RiderDeliveryReport;
 import Services.RiderService;
 import Utils.InputHelper;
 public class RiderConsole {
-    private final String riderId;
+    private String riderId;
     private final InputHelper inputHelper;
     private final RiderService riderService;
 
-    public RiderConsole(String riderId, InputHelper inputHelper, RiderService riderService) {
-        this.riderId = riderId;
+    public RiderConsole( InputHelper inputHelper, RiderService riderService) {
         this.inputHelper = inputHelper;
         this.riderService = riderService;
     }
 
     public void start() {
+        this.riderId=inputHelper.readString("Rider ID: ");
+
         int choice;
         do {
+            if(riderService.findById(riderId)==null){
+                throw new PlatformException("No rider with this ID.");
+            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
             try {

@@ -22,15 +22,13 @@ public class CustomerConsole {
     private final CustomerService customerService;
     private final RestaurantService restaurantService;
     private final OrderService orderService;
-
     private final PromotionRepository promotionRepository;
     private final ReportService reportService;
     private  String customerId;
 
-    public CustomerConsole(String customerId, InputHelper inputHelper,  CustomerService customerService,
+    public CustomerConsole(InputHelper inputHelper,  CustomerService customerService,
                            RestaurantService restaurantService, OrderService orderService,
                            PromotionRepository promotionRepository, ReportService reportService) {
-        this.customerId=customerId;
         this.inputHelper = inputHelper;
         this.customerService=customerService;
         this.restaurantService=restaurantService;
@@ -40,8 +38,13 @@ public class CustomerConsole {
     }
 
     public void start() {
+        this.customerId=inputHelper.readString("Customer ID: ");
+
         int choice;
         do {
+            if(customerService.findById(customerId)==null){
+                throw new PlatformException("No customer with this ID");
+            }
             showMenu();
             choice = inputHelper.readInt("Choose an option: ");
             try{

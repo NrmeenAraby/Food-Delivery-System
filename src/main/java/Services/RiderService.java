@@ -1,9 +1,6 @@
 package Services;
 
-import Domain.Order;
-import Domain.OrderStatus;
-import Domain.Rider;
-import Domain.VehicleType;
+import Domain.*;
 import Exceptions.PlatformException;
 import Exceptions.RiderBusyException;
 import Repositories.RiderRepository;
@@ -100,13 +97,15 @@ public class RiderService {
 
 
 
-    private Rider getRider(String riderId){
+    public Rider getRider(String riderId){
         Rider rider=riderRepository.findById(riderId);
         if(rider==null){
             throw new PlatformException("No rider with this ID.");
         }
         return rider;
     }
-
+    public Rider findById(String riderId){
+        return  riderRepository.findById(riderId);
+    }
 
 }
