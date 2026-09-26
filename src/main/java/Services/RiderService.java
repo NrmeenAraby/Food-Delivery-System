@@ -55,8 +55,8 @@ public class RiderService {
             throw new PlatformException("No assigned order for rider " + riderId + ".");
         }
         Order order=rider.getActiveOrder();
-        rider.completeDelivery();
         order.markDelivered();
+        rider.completeDelivery();
         orderService.dispatchNextReadyOrder(rider);
     }
     public void markPickedUp(String riderId){

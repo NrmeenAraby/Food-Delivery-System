@@ -13,7 +13,7 @@ public class Main {
         InputHelper inputHelper =new InputHelper();
         AuditLog auditLog=new AuditLog();
 
-
+        //Repositories
         CustomerRepository customerRepository=new CustomerRepository();
         MenuItemRepository menuItemRepository=new MenuItemRepository();
         OrderRepository orderRepository=new OrderRepository();
@@ -21,7 +21,7 @@ public class Main {
         RestaurantRepository restaurantRepository=new RestaurantRepository();
         RiderRepository riderRepository=new RiderRepository();
 
-
+        //services
         CustomerService customerService=new CustomerService(customerRepository,orderRepository);
         MenuItemService menuItemService=new MenuItemService(menuItemRepository);
         OrderService orderService=new OrderService(orderRepository,auditLog,riderRepository,restaurantRepository);
@@ -31,6 +31,7 @@ public class Main {
                 customerRepository);
         RiderService riderService=new RiderService(riderRepository,orderService,reportService);
 
+        //consoles
         AdminConsole adminConsole=new AdminConsole(inputHelper,restaurantService,customerService,riderService,
                 promotionService,reportService);
         CustomerConsole customerConsole=new CustomerConsole(inputHelper,customerService,restaurantService,orderService,
@@ -39,6 +40,7 @@ public class Main {
                 menuItemService);
         RiderConsole riderConsole=new RiderConsole(inputHelper,riderService);
 
+        //main console
         MainConsole mainConsole=new MainConsole(inputHelper,customerConsole,restaurantConsole,riderConsole,adminConsole);
         mainConsole.start();
     }

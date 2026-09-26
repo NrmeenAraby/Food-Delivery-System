@@ -111,16 +111,43 @@ public class AdminConsole {
         }
         boolean firstTimeCustomersRestriction= inputHelper.readYesNo("Restrict to first-time customers?");
         PromotionType promotionType=readPromotionType();
-        PromotionStrategy promotionStrategy = switch (promotionType) {
-            case PERCENTAGE -> new PercentagePromotionStrategy(
-                    inputHelper.readBigDecimal("Percentage: "),
-                    inputHelper.readBigDecimal("Maximum discount cap: ")
-            );
-            case FIXED_AMOUNT -> new FixedAmountPromotionStrategy(
-                    inputHelper.readBigDecimal("Discount amount: ")
-            );
-            case FREE_DELIVERY -> new FreeDeliveryPromotionStrategy();
-        };
+        PromotionStrategy promotionStrategy=null;
+        switch (promotionType) {
+            case PERCENTAGE -> {
+                BigDecimal percentage =
+                        inputHelper.readBigDecimal("Percentage (0-1): ");
+                while (percentage.compareTo(BigDecimal.ZERO) < 0 ||
+                        percentage.compareTo(BigDecimal.ONE) > 0) {
+                    System.out.println("Percentage must be between 0 and 1.");
+                    percentage = inputHelper.readBigDecimal("Percentage (0-1): ");
+                }
+
+                BigDecimal cap =
+                        inputHelper.readBigDecimal("Maximum discount cap: ");
+                while (cap.compareTo(BigDecimal.ZERO) < 0) {
+                    System.out.println("Discount cap cannot be negative.");
+                    cap = inputHelper.readBigDecimal("Maximum discount cap: ");
+                }
+
+                promotionStrategy =
+                        new PercentagePromotionStrategy(percentage, cap);
+            }
+
+            case FIXED_AMOUNT -> {
+                BigDecimal amount =
+                        inputHelper.readBigDecimal("Discount amount: ");
+                while (amount.compareTo(BigDecimal.ZERO) < 0) {
+                    System.out.println("Discount amount cannot be negative.");
+                    amount = inputHelper.readBigDecimal("Discount amount: ");
+                }
+
+                promotionStrategy =
+                        new FixedAmountPromotionStrategy(amount);
+            }
+
+            case FREE_DELIVERY -> promotionStrategy =
+                    new FreeDeliveryPromotionStrategy();
+        }
         promotionService.createPromotion(code,minimumSubTotal,expiryDate,restrictedDistrict,
                 firstTimeCustomersRestriction,promotionStrategy);
         System.out.println("Promotion created successfully.");

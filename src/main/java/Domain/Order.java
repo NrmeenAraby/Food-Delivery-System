@@ -2,6 +2,7 @@ package Domain;
 
 import Exceptions.IllegalPromotionException;
 import Exceptions.InvalidOrderTransitionException;
+import Exceptions.PlatformException;
 import OrderStatusObserver.EventPublisher;
 
 import java.math.BigDecimal;
@@ -192,15 +193,15 @@ public class Order {
     }
     public void assignRider(String riderId){
         if(this.riderId!=null){
-            throw new IllegalStateException("Order already assigned to a rider");
+            throw new PlatformException("Order already assigned to a rider");
         }
+        changeStatus(OrderStatus.ASSIGNED);
         this.riderId = riderId;
         this.assignedAt=LocalDateTime.now();
-        changeStatus(OrderStatus.ASSIGNED);
     }
     public void markDelivered(){
-        this.deliveredAt=LocalDateTime.now();
         changeStatus(OrderStatus.DELIVERED);
+        this.deliveredAt=LocalDateTime.now();
     }
 
     public void setPaid(){

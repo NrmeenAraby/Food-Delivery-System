@@ -92,7 +92,7 @@ public class Customer {
         orderCount++;
     }
     public int getOrderCount(){
-        return completedOrderCount;
+        return orderCount;
     }
     public LoyaltyTier getLoyaltyTier(){
         if(completedOrderCount>= GOLD_TIER_ORDERS){

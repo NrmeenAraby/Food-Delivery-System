@@ -4,6 +4,7 @@ import Builders.OrderBuilder;
 import Domain.*;
 import Exceptions.InvalidOrderTransitionException;
 import Exceptions.PlatformException;
+import Exceptions.RestaurantClosedException;
 import Repositories.CustomerRepository;
 import Repositories.OrderRepository;
 
@@ -134,15 +135,21 @@ public class OrderService {
         if(order.isPaid()) {
             throw new PlatformException("Order is paid already.");
         }
-        BigDecimal total = order.calculatePrice().total();
         Customer customer=order.getCustomer();
-
-        customer.deductMoney(total);
+        customer.deductMoney(order.getFinalPrice().total());
         order.setPaid();
         return customer.getWalletBalance();
     }
     public void placeOrder(Customer customer, String restaurantId, Address deliveryAddress, List<OrderLine> lineItems,
                            BigDecimal distance,Promotion promotion){
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantId);
+        if (restaurant == null) {
+            throw new PlatformException("There isn't restaurant with this ID.\"");
+        }
+        if (!restaurant.isOpen()) {
+            throw new RestaurantClosedException("This restaurant is closed.");
+        }
         OrderBuilder orderBuilder=new OrderBuilder().setCustomer(customer)
                 .setRestaurantId(restaurantId)
                 .setDeliveryAddress(deliveryAddress)
@@ -153,6 +160,16 @@ public class OrderService {
             orderBuilder.addLineItem(item.getMenuItem(),item.getQuantity());
         }
         Order order=orderBuilder.build();
+        order.calculatePrice();
+        for (OrderLine line : order.getLineItems()) {
+            if (!line.getMenuItem().isAvailable()) {
+                throw new PlatformException("Item is not available: " + line.getMenuItem().getName());
+            }
+
+            if (!line.getMenuItem().hasEnoughStock(line.getQuantity().doubleValue())) {
+                throw new PlatformException("Insufficient stock for: " + line.getMenuItem().getName());
+            }
+        }
         for (OrderLine line : order.getLineItems()) {
             line.getMenuItem().decreaseStock(line.getQuantity().doubleValue());
         }
@@ -162,7 +179,7 @@ public class OrderService {
         order.getEventPublisher().subscribe(new RiderDashboardListener(PlatformConfig.getInstance(),riderRepository));
         order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderRepository.addOrder(order);
-
+        customer.incrementOrderCount();
     }
     public Order trackOrder(String orderId){
         Order order=orderRepository.findById(orderId);
@@ -185,8 +202,7 @@ public class OrderService {
             orderRepository.removeReadyOrder(orderId);
         }
         if(order.isPaid()){
-            BigDecimal total = order.calculatePrice().total();
-            order.getCustomer().addMoney(total);
+            order.getCustomer().addMoney(order.getFinalPrice().total());
             order.markAsUnpaid();
         }
         order.changeStatus(OrderStatus.CANCELLED);

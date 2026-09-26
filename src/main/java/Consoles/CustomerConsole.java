@@ -113,7 +113,7 @@ public class CustomerConsole {
     private void trackOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
         Order order=orderService.trackOrder(orderId);
-        System.out.println("Status: "+order.getOrderStatus()+" , Elapsed time: "+ Duration.between(LocalDateTime.now(),order.getPlacedAt()));
+        System.out.println("Status: "+order.getOrderStatus()+" , Elapsed time: "+ Duration.between(order.getPlacedAt(),LocalDateTime.now()));
     }
     private void payForOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
@@ -128,13 +128,6 @@ public class CustomerConsole {
 
         String restaurantId = inputHelper.readString("Restaurant ID: ");
 
-        Restaurant restaurant = restaurantService.findById(restaurantId);
-        if (restaurant == null) {
-            throw new PlatformException("There isn't restaurant with this ID.\"");
-        }
-        if (!restaurant.isOpen()) {
-            throw new RestaurantClosedException("This restaurant is closed.");
-        }
         System.out.println("Choose delivery address:");
         List<Address> customerAddresses = customer.getAddresses();
         viewCustomerAddresses(customerAddresses);
@@ -162,17 +155,12 @@ public class CustomerConsole {
                 continue;
             }
 
-            if (!pickedMenuItem.isAvailable()) {
-                throw new UnavailableItemException("This item isn't available.");
-            }
             double quantity = inputHelper.readDouble("Quantity: ");
             while (quantity <= 0.0) {
                 System.out.println("Quantity must be greater than zero.");
                 quantity = inputHelper.readDouble("Quantity: ");
             }
-            if (!pickedMenuItem.hasEnoughStock(quantity)) {
-                throw new StockShortageException("The exist quantity cant cover this order.");
-            }
+
             lineItems.add(new OrderLine(pickedMenuItem, BigDecimal.valueOf(quantity)));
         }
         BigDecimal distance = inputHelper.readBigDecimal("Enter the estimated distance: ");
@@ -194,7 +182,6 @@ public class CustomerConsole {
             }
         }
         orderService.placeOrder(customer, restaurantId,deliveryAddress,lineItems, distance,promotion);
-        customer.incrementOrderCount();
         System.out.println("Order placed successfully");
     }
     private void viewCustomerAddresses(List<Address>addresses){
@@ -268,7 +255,8 @@ public class CustomerConsole {
             System.out.println("No restaurants found.");
             return;
         }
-        filteredRestaurants.sort(Comparator.comparing(Restaurant::getAvgRating).reversed());
+        filteredRestaurants.sort(Comparator.comparing(Restaurant::getAvgRating)
+                .reversed().thenComparing(Restaurant::getName));
         showRestaurants(filteredRestaurants);
     }
 
