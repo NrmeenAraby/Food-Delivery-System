@@ -167,6 +167,10 @@ public class OrderService {
         }
         Order order=orderBuilder.build();
         order.calculatePrice();
+        System.out.println("Order's price: "+order.getFinalPrice());
+        if(customer.getWalletBalance().compareTo(order.getFinalPrice().total())<0){
+            throw new InsufficientWalletException("Insufficient funds");
+        }
         for (OrderLine line : order.getLineItems()) {
             if (restaurant.getMenu().findById(line.getMenuItem().getId()) == null) {
                 throw new UnavailableItemException("Item does not belong to this restaurant: " + line.getMenuItem().getName());
@@ -189,6 +193,8 @@ public class OrderService {
         order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderRepository.addOrder(order);
         customer.incrementOrderCount();
+        System.out.println("Order "+ order.getId()+" placed successfully");
+
     }
     public Order trackOrder(String customerId,String orderId){
         Order order=orderRepository.findById(orderId);
@@ -225,5 +231,6 @@ public class OrderService {
             order.markAsUnpaid();
         }
         order.changeStatus(OrderStatus.CANCELLED);
+        System.out.println("Canceled Successfully");
     }
 }

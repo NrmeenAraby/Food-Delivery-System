@@ -237,10 +237,11 @@ public class Order {
                 " | Customer: " + customer.getName() +
                 " | Restaurant: " + restaurantId +
                 " | Delivery Address: " + deliveryAddress +
-                " | Place at: " + placedAt +
-                " | Assigned at: " + assignedAt +
+                " | Placed at: " + placedAt +
+                "\n | Assigned at: " + assignedAt +
                 " | Status: " + orderStatus +
                 " | Total: " + calculatePrice().total() + " EGP" +
+                " | paid: " + (isPaid()?"Yes":"No") +
                 " | Distance: " + distanceKm + " km";
     }
 }

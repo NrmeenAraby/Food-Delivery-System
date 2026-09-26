@@ -3,6 +3,7 @@ package Domain;
 import Exceptions.PlatformException;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,7 @@ public class Restaurant {
         this .district=district;
         setRating(avgRating);
         this.menu=new Menu();
-        cuisineCategories=new HashSet<>();
+        cuisineCategories=new LinkedHashSet<>();
         status=true;
         completedOrders=0;
     }
@@ -102,5 +103,17 @@ public class Restaurant {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+    @Override
+    public String toString() {
+        return String.format(
+                "Restaurant{id='%s', name='%s', district='%s', cuisines=%s, rating=%.1f, status=%s}",
+                id,
+                name,
+                district,
+                cuisineCategories,
+                avgRating,
+                isOpen() ? "OPEN" : "CLOSED"
+        );
     }
 }

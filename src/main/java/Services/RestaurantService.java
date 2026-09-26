@@ -51,6 +51,7 @@ public class RestaurantService {
             restaurant.addCuisineCategory(cuisine);
         }
         restaurantRepository.addRestaurant(restaurant);
+        System.out.println("Restaurant "+restaurant.getId()+" added successfully.");
     }
 
     public List<Order> getOrdersWithSpecificStatus(String restaurantId,OrderStatus orderStatus){
@@ -92,9 +93,7 @@ public class RestaurantService {
     public List<MenuItem> getMenu(String restaurantId){
         Restaurant restaurant=restaurantRepository.findById(restaurantId);
         if(restaurant==null){
-            throw new RestaurantNotFoundException(
-                    "No restaurant found with this ID: " + restaurantId
-            );
+            throw new RestaurantNotFoundException("No restaurant found with this ID: " + restaurantId);
         }
         return restaurant.getMenu().getItems();
     }
@@ -109,4 +108,7 @@ public class RestaurantService {
         return  restaurantRepository.findById(restaurantId);
     }
 
+    public List<Restaurant> getAllRestaurants() {
+        return restaurantRepository.getAllRestaurants();
+    }
 }

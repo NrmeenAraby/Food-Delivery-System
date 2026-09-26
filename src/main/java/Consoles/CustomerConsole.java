@@ -127,7 +127,6 @@ public class CustomerConsole {
     private void cancelOrder(){
         String orderId=inputHelper.readString("Enter the order ID: ");
         orderService.cancelOrder(customerId,orderId);
-        System.out.println("Canceled Successfully");
     }
 
     private void trackOrder(){
@@ -148,20 +147,6 @@ public class CustomerConsole {
 
         String restaurantId = inputHelper.readString("Restaurant ID: ");
 
-        System.out.println("Choose delivery address:");
-        List<Address> customerAddresses = customer.getAddresses();
-        if (customerAddresses.isEmpty()) {
-            System.out.println("You have no saved addresses. Please add an address first.");
-            return;
-        }
-        viewCustomerAddresses(customerAddresses);
-        int choice;
-        do {
-            choice = inputHelper.readInt("Enter address number:");
-        } while (choice <= 0 || choice > customerAddresses.size());
-
-        Address deliveryAddress = customerAddresses.get((choice-1));
-
         List<MenuItem> menuItems = restaurantService.getMenu(restaurantId);
         List<OrderLine> lineItems = new ArrayList<>();
         int itemNumber;
@@ -170,7 +155,7 @@ public class CustomerConsole {
             do {
                 itemNumber = inputHelper.readInt("Choose Item(0 to exit): ");
             } while (itemNumber < 0 || itemNumber > menuItems.size());
-            System.out.println("\n" + "0. Done");
+
             if (itemNumber == 0)
                 break;
             MenuItem pickedMenuItem = displayedItems.get(itemNumber);
@@ -190,6 +175,22 @@ public class CustomerConsole {
         if (lineItems.isEmpty()) {
             throw new PlatformException("Order must contain at least one item.");
         }
+
+        System.out.println("Choose delivery address:");
+        List<Address> customerAddresses = customer.getAddresses();
+        if (customerAddresses.isEmpty()) {
+            System.out.println("You have no saved addresses. Please add an address first.");
+            return;
+        }
+        viewCustomerAddresses(customerAddresses);
+        int choice;
+        do {
+            choice = inputHelper.readInt("Enter address number:");
+        } while (choice <= 0 || choice > customerAddresses.size());
+
+        Address deliveryAddress = customerAddresses.get((choice-1));
+
+
         BigDecimal distance = inputHelper.readBigDecimal("Enter the estimated distance: ");
         while (distance.compareTo(BigDecimal.ZERO) <= 0) {
             System.out.println("Distance must be greater than zero");
@@ -209,7 +210,6 @@ public class CustomerConsole {
             }
         }
         orderService.placeOrder(customer, restaurantId,deliveryAddress,lineItems, distance,promotion);
-        System.out.println("Order placed successfully");
     }
     private void viewCustomerAddresses(List<Address>addresses){
         for(int i=0;i<addresses.size();i++){

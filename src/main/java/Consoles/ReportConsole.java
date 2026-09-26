@@ -58,7 +58,7 @@ public class ReportConsole {
         System.out.println("1. Total Revenue by Date Range");
         System.out.println("2. Top 5 Restaurants by Monthly Revenue");
         System.out.println("3. Average Order Value by District");
-        System.out.println("4. High-Rated Restaurants");
+        System.out.println("4. High-Rated Restaurants with at least 20 orders");
         System.out.println("5. Orders by Current Status");
         System.out.println("6. Rider Delivery Statistics");
         System.out.println("7. Most Frequently Ordered Menu Item");

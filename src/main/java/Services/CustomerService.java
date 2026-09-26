@@ -40,6 +40,8 @@ public class CustomerService {
             customer.addAddress(address);
         }
         customerRepository.addCustomer(customer);
+        System.out.println("Customer "+customer.getId() +" added successfully.");
+
     }
     public void saveSearch(String customerId, SearchCriteria searchCriteria){
         if(isThereSearchCriteria(searchCriteria)){

@@ -52,6 +52,7 @@ public class AdminConsole {
                     case 9 -> runReports();
                     case 10 -> viewPlatformStatistics();
                     case 11-> showLogs();
+                    case 12->showAllRestaurants();
                     case 0 -> System.out.println("Ciao!");
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
@@ -60,6 +61,11 @@ public class AdminConsole {
             }
 
         } while (choice != 0);
+    }
+
+    private void showAllRestaurants() {
+        List<Restaurant>restaurants=restaurantService.getAllRestaurants();
+        restaurants.forEach(System.out::println);
     }
 
     private void toggleRestaurantStatus() {
@@ -180,7 +186,6 @@ public class AdminConsole {
         BigDecimal maxOrdersUnits=inputHelper.readBigDecimal("Max order units it can hold: ");
         BigDecimal maxSpeed=inputHelper.readBigDecimal("Max speed: ");
         riderService.addRider(name,vehicleType,district,maxRange,maxOrdersUnits,maxSpeed);
-        System.out.println("Rider added successfully.");
     }
     private void removeCustomer(){
         String customerId=inputHelper.readString("Customer ID: ");
@@ -202,7 +207,6 @@ public class AdminConsole {
             customerAddresses.add(readAddress());
         }
         customerService.addCustomer(name,phoneNumber,walletBalance,customerAddresses);
-        System.out.println("Customer added successfully.");
     }
     private Address readAddress(){
         String district = inputHelper.readString("District: ");
@@ -227,12 +231,11 @@ public class AdminConsole {
        do{
             avgRating= inputHelper.readDouble("Average Rating: ");
             if(avgRating<0 ||avgRating>5){
-                System.out.println("Invalid rating, Rating must be between 0.0 anf 5.0");
+                System.out.println("Invalid rating, Rating must be between 0.0 and 5.0");
             }
         } while (avgRating<0 ||avgRating>5);
         Set<CuisineCategory> cuisines = readCuisines();
         restaurantService.addRestaurant(name,district,avgRating,cuisines);
-        System.out.println("Restaurant added successfully.");
     }
 
     private PromotionType readPromotionType() {
@@ -305,6 +308,7 @@ public class AdminConsole {
         System.out.println("9. Run Reports");
         System.out.println("10. View Platform Statistics");
         System.out.println("11. View Audit Logs");
+        System.out.println("12. View all restaurants");
         System.out.println("0. Back");
     }
 }

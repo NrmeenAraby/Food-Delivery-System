@@ -41,6 +41,8 @@ public class RiderService {
         }
         Rider rider=new Rider(name,vehicleType,district,maxRange,maxOrdersUnits,maxSpeed);
         riderRepository.addRider(rider);
+        System.out.println("Rider "+rider.getId() +" added successfully.");
+
     }
     public RiderDeliveryReport viewStatistics(String riderId){
         getRider(riderId); // throws if no rider
@@ -92,7 +94,7 @@ public class RiderService {
         }
         rider.updateAvailabilityStatus(true);
         orderService.dispatchNextReadyOrder(rider);
-        System.out.println("Rider: "+riderId+" is now ready for assignment.");
+        System.out.println("Rider: "+riderId+" is now available.");
     }
 
 

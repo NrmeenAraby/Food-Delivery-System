@@ -123,6 +123,7 @@ public class Customer {
             throw new IllegalArgumentException("Amount must be positive.");
         }
         walletBalance=walletBalance.add(amount);
+        System.out.println("Your balance is: "+this.walletBalance);
     }
     public void deductMoney(BigDecimal amount){
         if(amount.compareTo(BigDecimal.ZERO)<=0) {
