@@ -23,7 +23,7 @@ import Repositories.RiderRepository;
 
 public class OrderService {
     private final OrderRepository orderRepository;
-    private AuditLog auditLog;
+    private final AuditLog auditLog;
     private final RiderRepository riderRepository;
     private final RestaurantRepository restaurantRepository;
 

@@ -1,8 +1,6 @@
 package Consoles;
 
-import Domain.OrderStatus;
-import Domain.PromotionType;
-import Domain.VehicleType;
+import Domain.*;
 import Exceptions.PlatformException;
 import PromotionStrategies.FixedAmountPromotionStrategy;
 import PromotionStrategies.FreeDeliveryPromotionStrategy;
@@ -13,7 +11,9 @@ import Utils.InputHelper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class AdminConsole {
     private final InputHelper inputHelper;
@@ -22,13 +22,15 @@ public class AdminConsole {
     private final RiderService riderService;
     private final PromotionService promotionService;
     private final ReportService reportService;
-    public AdminConsole(InputHelper inputHelper, RestaurantService restaurantService, CustomerService customerService, RiderService riderService, PromotionService promotionService, ReportService reportService) {
+    private final AuditLog auditLog;
+    public AdminConsole(InputHelper inputHelper, RestaurantService restaurantService, CustomerService customerService, RiderService riderService, PromotionService promotionService, ReportService reportService, AuditLog auditLog) {
         this.inputHelper = inputHelper;
         this.restaurantService = restaurantService;
         this.customerService = customerService;
         this.riderService = riderService;
         this.promotionService = promotionService;
         this.reportService = reportService;
+        this.auditLog = auditLog;
     }
 
     public void start() {
@@ -41,13 +43,15 @@ public class AdminConsole {
                 switch (choice) {
                     case 1 -> addRestaurant();
                     case 2 -> removeRestaurant();
-                    case 3 -> addCustomer();
-                    case 4 -> removeCustomer();
-                    case 5 -> addRider();
-                    case 6 -> removeRider();
-                    case 7 -> createPromotion();
-                    case 8 -> runReports();
-                    case 9 -> viewPlatformStatistics();
+                    case 3 -> toggleRestaurantStatus();
+                    case 4 -> addCustomer();
+                    case 5 -> removeCustomer();
+                    case 6 -> addRider();
+                    case 7 -> removeRider();
+                    case 8 -> createPromotion();
+                    case 9 -> runReports();
+                    case 10 -> viewPlatformStatistics();
+                    case 11-> showLogs();
                     case 0 -> System.out.println("Ciao!");
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
@@ -58,6 +62,15 @@ public class AdminConsole {
         } while (choice != 0);
     }
 
+    private void toggleRestaurantStatus() {
+        String restaurantId=inputHelper.readString("Restaurant ID: ");
+        boolean isOpen = restaurantService.toggleRestaurantStatus(restaurantId);
+        System.out.println("Toggled successfully, now it is "+(isOpen?"Opened":"Clsoed"));
+    }
+
+    private void showLogs() {
+        auditLog.showLogs();
+    }
 
     private void viewPlatformStatistics() {
         int totalRestaurants=reportService.getTotalNumberOfRestaurants();
@@ -193,7 +206,15 @@ public class AdminConsole {
         System.out.println("Enter the restaurant info ");
         String name=inputHelper.readString("Name: ");
         String district=inputHelper.readString("District: ");
-        restaurantService.addRestaurant(name,district);
+        double avgRating ;
+       do{
+            avgRating= inputHelper.readDouble("Average Rating: ");
+            if(avgRating<0 ||avgRating>5){
+                System.out.println("Invalid rating, Rating must be between 0.0 anf 5.0");
+            }
+        } while (avgRating<0 ||avgRating>5);
+        Set<CuisineCategory> cuisines = readCuisines();
+        restaurantService.addRestaurant(name,district,avgRating,cuisines);
         System.out.println("Restaurant added successfully.");
     }
 
@@ -229,17 +250,44 @@ public class AdminConsole {
 
         return VehicleType.values()[choice - 1];
     }
+    private Set<CuisineCategory> readCuisines() {
+        Set<CuisineCategory> cuisines = new HashSet<>();
+        CuisineCategory[] categories = CuisineCategory.values();
+
+        while (true) {
+            System.out.println("Choose cuisine:");
+
+            for (int i = 0; i < categories.length; i++) {
+                System.out.println((i + 1) + ". " + categories[i]);
+            }
+
+            int choice = inputHelper.readInt("Enter cuisine number: ");
+
+            if (choice < 1 || choice > categories.length) {
+                System.out.println("Invalid cuisine number.");
+                continue;
+            }
+
+            cuisines.add(categories[choice - 1]);
+
+            if (!inputHelper.readYesNo("Add another cuisine?")) {
+                return cuisines;
+            }
+        }
+    }
     private void showMenu() {
         System.out.println("\n===== Admin Console =====");
         System.out.println("1. Add Restaurant");
         System.out.println("2. Remove Restaurant");
-        System.out.println("3. Add Customer");
-        System.out.println("4. Remove Customer");
-        System.out.println("5. Add Rider");
-        System.out.println("6. Remove Rider");
-        System.out.println("7. Create Promotion");
-        System.out.println("8. Run Reports");
-        System.out.println("9. View Platform Statistics");
+        System.out.println("3. Toggle Restaurant Status");
+        System.out.println("4. Add Customer");
+        System.out.println("5. Remove Customer");
+        System.out.println("6. Add Rider");
+        System.out.println("7. Remove Rider");
+        System.out.println("8. Create Promotion");
+        System.out.println("9. Run Reports");
+        System.out.println("10. View Platform Statistics");
+        System.out.println("11. View Audit Logs");
         System.out.println("0. Back");
     }
 }

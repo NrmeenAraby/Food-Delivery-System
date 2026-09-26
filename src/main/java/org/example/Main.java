@@ -2,8 +2,6 @@ package org.example;
 
 import Consoles.*;
 import Domain.AuditLog;
-import Domain.Order;
-import Domain.PlatformConfig;
 import Repositories.*;
 import Services.*;
 import Utils.InputHelper;
@@ -33,7 +31,7 @@ public class Main {
 
         //consoles
         AdminConsole adminConsole=new AdminConsole(inputHelper,restaurantService,customerService,riderService,
-                promotionService,reportService);
+                promotionService,reportService, auditLog);
         CustomerConsole customerConsole=new CustomerConsole(inputHelper,customerService,restaurantService,orderService,
                 promotionRepository,reportService);
         RestaurantConsole restaurantConsole=new RestaurantConsole(inputHelper,restaurantService,orderService,

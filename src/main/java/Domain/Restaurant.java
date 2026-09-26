@@ -10,16 +10,16 @@ public class Restaurant {
     private String name;
     private  String district;
     private final Set<CuisineCategory> cuisineCategories;
-    private double totalRating;
-    private int ratingCount;
+    private double avgRating;
     private final Menu menu;
     private boolean status; //true>> open
     private int completedOrders;
 
-    public Restaurant(String name,String district){
+    public Restaurant(String name,String district, double avgRating){
         id="RS-"+nextId.getAndIncrement();
         this.name=name;
         this .district=district;
+        setRating(avgRating);
         this.menu=new Menu();
         cuisineCategories=new HashSet<>();
         status=true;
@@ -55,10 +55,13 @@ public class Restaurant {
         return status;
     }
 
+    public boolean getStatus() {
+        return status;
+    }
+
     public Set<CuisineCategory> getCuisineCategories() {
         return Set.copyOf(cuisineCategories);
     }
-
     public void addCuisineCategory(CuisineCategory cuisineCategory){
         cuisineCategories.add(cuisineCategory);
     }
@@ -66,15 +69,13 @@ public class Restaurant {
         cuisineCategories.remove(cuisineCategory);
     }
 
-    public void addRating(double rating){
+    public void setRating(double rating){
         if(rating<0 || rating>5){
             throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
-        totalRating+=rating;
-        ratingCount++;
     }
     public double getAvgRating(){
-        return ratingCount==0? 0.0:totalRating/ratingCount;
+        return avgRating;
     }
     public void updateRestaurantStatus(boolean status){
         this.status=status;

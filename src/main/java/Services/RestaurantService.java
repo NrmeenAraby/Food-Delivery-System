@@ -8,6 +8,7 @@ import Repositories.OrderRepository;
 import Repositories.RestaurantRepository;
 
 import java.util.List;
+import java.util.Set;
 
 public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
@@ -16,6 +17,14 @@ public class RestaurantService {
     public RestaurantService(RestaurantRepository restaurantRepository, OrderRepository orderRepository) {
         this.restaurantRepository = restaurantRepository;
         this.orderRepository = orderRepository;
+    }
+    public boolean toggleRestaurantStatus(String restaurantId) {
+        Restaurant restaurant=restaurantRepository.findById(restaurantId);
+        if(restaurant==null){
+            throw new PlatformException("No restaurant with this ID");
+        }
+        restaurant.updateRestaurantStatus(!restaurant.getStatus());
+        return restaurant.isOpen();
     }
 
     public void removeRestaurant(String restaurantId){
@@ -32,8 +41,14 @@ public class RestaurantService {
         }
         restaurantRepository.removeRestaurant(restaurantId);
     }
-    public void addRestaurant(String name,String district){
-        Restaurant restaurant=new Restaurant(name,district);
+    public void addRestaurant(String name, String district, double avgRating, Set<CuisineCategory>cuisineCategories){
+        if(cuisineCategories.isEmpty()){
+            throw new PlatformException("Restaurant must have at least one cuisine.");
+        }
+        Restaurant restaurant=new Restaurant(name,district,avgRating);
+        for(var cuisine: cuisineCategories){
+            restaurant.addCuisineCategory(cuisine);
+        }
         restaurantRepository.addRestaurant(restaurant);
     }
 

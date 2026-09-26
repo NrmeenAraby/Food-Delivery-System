@@ -61,7 +61,7 @@ public class MenuItemService {
         if(menuItem==null){
             throw new PlatformException("No item with this ID");
         }
-        if(! restaurant.getMenu().getItems().contains(menuItem)){
+        if(!restaurant.getMenu().getItems().contains(menuItem)){
             throw new PlatformException("This item doesn't belong to this restaurant.");
         }
         menuItem.updateAvailability(!menuItem.getAvailabilityFlag());

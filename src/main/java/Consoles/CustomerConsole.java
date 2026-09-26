@@ -294,6 +294,12 @@ public class CustomerConsole {
                 }
     }
     private CuisineCategory readCuisine() {
+        System.out.println("Available cuisines:");
+
+        for (CuisineCategory cuisine : CuisineCategory.values()) {
+            System.out.println("- " + cuisine);
+        }
+
         while (true) {
             String input = inputHelper.readString(
                     "Cuisine (press Enter to skip): ");
@@ -305,7 +311,7 @@ public class CustomerConsole {
             try {
                 return CuisineCategory.valueOf(input.toUpperCase());
             } catch (IllegalArgumentException e) {
-                System.out.println("Invalid cuisine. Please try again.");
+                System.out.println("Invalid cuisine. Please choose from the list.");
             }
         }
     }
