@@ -277,7 +277,7 @@ public class CustomerConsole {
         }
 
         customerService.saveSearch(customerId,criteria);
-        List<Restaurant> filteredRestaurants=restaurantService.searchByCriteria(criteria);
+        List<Restaurant> filteredRestaurants=new ArrayList<>(restaurantService.searchByCriteria(criteria));
         if(filteredRestaurants.isEmpty()){
             System.out.println("No restaurants found.");
             return;
@@ -328,9 +328,7 @@ public class CustomerConsole {
         }
 
         while (true) {
-            String input = inputHelper.readString(
-                    "Cuisine (press Enter to skip): ");
-
+            String input = inputHelper.readString("Cuisine (press Enter to skip): ");
             if (input.isBlank()) {
                 return null;
             }

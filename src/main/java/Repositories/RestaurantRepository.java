@@ -6,6 +6,7 @@ import Domain.Restaurant;
 import Filters.RestaurantFilter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class RestaurantRepository {
     private final Map<String, Restaurant> restaurants=new HashMap<>();
@@ -37,7 +38,7 @@ public class RestaurantRepository {
         return restaurants.values().stream()
                 .filter(Restaurant::isOpen)
                 .filter(restaurantFilter::matches)
-                .toList();
+                .collect(Collectors.toList());
     }
     public Restaurant removeRestaurant(String restaurantId) {
         return restaurants.remove(restaurantId);
