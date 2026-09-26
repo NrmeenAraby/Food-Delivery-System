@@ -17,6 +17,7 @@ public class RestaurantService {
         this.restaurantRepository = restaurantRepository;
         this.orderRepository = orderRepository;
     }
+
     public void removeRestaurant(String restaurantId){
         Restaurant restaurant=restaurantRepository.findById(restaurantId);
         if(restaurant==null){

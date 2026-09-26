@@ -36,6 +36,9 @@ public class OrderService {
         this.platformConfig = platformConfig;
         this.restaurantRepository = restaurantRepository;
     }
+    public int getTotalNumberOfOrders(){
+        return orderRepository.getAllOrders().size();
+    }
     public boolean dispatchNextReadyOrder(Rider rider){
         List<Order> temp=new ArrayList<>();
         while(true){

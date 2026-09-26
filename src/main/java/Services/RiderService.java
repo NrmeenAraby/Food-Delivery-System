@@ -20,6 +20,7 @@ public class RiderService {
         this.orderService = orderService;
         this.reportService = reportService;
     }
+
     public void removeRider(String riderId){
         Rider rider=riderRepository.findById(riderId);
         if(rider==null){

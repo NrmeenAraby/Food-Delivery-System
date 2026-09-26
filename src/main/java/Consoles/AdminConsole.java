@@ -1,5 +1,6 @@
 package Consoles;
 
+import Domain.OrderStatus;
 import Domain.PromotionType;
 import Domain.VehicleType;
 import Exceptions.PlatformException;
@@ -12,6 +13,7 @@ import Utils.InputHelper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
 public class AdminConsole {
     private final InputHelper inputHelper;
@@ -44,8 +46,8 @@ public class AdminConsole {
                     case 5 -> addRider();
                     case 6 -> removeRider();
                     case 7 -> createPromotion();
-//                    case 8 -> runReports();
-//                    case 9 -> viewPlatformStatistics();
+                    case 8 -> runReports();
+                    case 9 -> viewPlatformStatistics();
                     case 0 -> System.out.println("Ciao!");
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
@@ -56,6 +58,47 @@ public class AdminConsole {
         } while (choice != 0);
     }
 
+
+    private void viewPlatformStatistics() {
+        int totalRestaurants=reportService.getTotalNumberOfRestaurants();
+        Long totalOpenRestaurants= reportService.getTotalNumberOfOpenRestaurants();
+
+        int totalCustomers=reportService.getTotalNumberOfCustomers();
+
+        int totalRiders=reportService.getTotalNumberOfRiders();
+        Long availableRiders=reportService.getNumberOfAvailableRiders();
+
+        int totalOrders=reportService.getTotalNumberOfOrders();
+        Map<OrderStatus,Long>ordersPerStatus = reportService.getCountOfEachOrderStatus();
+
+        System.out.println("\n===== Platform Statistics =====");
+
+        System.out.println("\n--- Restaurants ---");
+        System.out.println("Total Restaurants : " + totalRestaurants);
+        System.out.println("Open Restaurants  : " + totalOpenRestaurants);
+
+        System.out.println("\n--- Customers ---");
+        System.out.println("Total Customers   : " + totalCustomers);
+
+        System.out.println("\n--- Riders ---");
+        System.out.println("Total Riders      : " + totalRiders);
+        System.out.println("Available Riders  : " + availableRiders);
+
+        System.out.println("\n--- Orders ---");
+        System.out.println("Total Orders      : " + totalOrders);
+
+        System.out.println("\nOrders by Status:");
+        for (OrderStatus status : OrderStatus.values()) {
+            System.out.println(status + " : " +
+                    ordersPerStatus.getOrDefault(status, 0L));
+        }
+
+    }
+
+    private void runReports() {
+        ReportConsole reportConsole = new ReportConsole(inputHelper, reportService);
+        reportConsole.start();
+    }
     private void createPromotion(){
         System.out.println("Enter the promotion info ");
         String code=inputHelper.readString("Promo Code: ");
@@ -125,10 +168,6 @@ public class AdminConsole {
         String district=inputHelper.readString("District: ");
         restaurantService.addRestaurant(name,district);
         System.out.println("Restaurant added successfully.");
-    }
-    private void runReports() {
-        ReportConsole reportConsole = new ReportConsole(inputHelper, reportService);
-        reportConsole.start();
     }
 
     private PromotionType readPromotionType() {

@@ -136,27 +136,40 @@ public class ReportService {
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey);
     }
-    public List<Customer> getIdleCustomers(){
-        LocalDate cutOff=LocalDate.now().minusDays(30);
-       Map<Customer,List<Order>> customerOrders = orderRepository.getAllOrders().stream()
-               .collect(Collectors.groupingBy(Order::getCustomer));
+    public List<Customer> getIdleCustomers() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
 
-       List<Customer>idleCustomersWithOrders= customerOrders.values().stream()
-               .filter(orders -> orders.stream()
-                       .map(Order::getPlacedAt)
-                       .max(LocalDateTime::compareTo)
-                       .map(date->date.toLocalDate().isBefore(cutOff))
-                       .orElse(true))
-               .map(orders -> orders.get(0).getCustomer())
-               .toList();
-        List<Customer>idleCustomersWithoutOrders= customerRepository.getAllCustomers().stream()
-                .filter(customer->customer.getOrderCount()==0)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        idleCustomersWithoutOrders.addAll(idleCustomersWithOrders);
-        return  idleCustomersWithoutOrders;
-
+        return customerRepository.getAllCustomers().stream()
+                .filter(customer -> orderRepository.getAllOrders().stream()
+                        .filter(order -> order.getCustomer().equals(customer))
+                        .map(Order::getPlacedAt)
+                        .max(LocalDateTime::compareTo)
+                        .map(lastOrder -> lastOrder.isBefore(cutoff))
+                        .orElse(true))
+                .toList();
     }
 
+    public int getTotalNumberOfRestaurants(){
+        return restaurantRepository.getAllRestaurants().size();
+    }
+    public Long getTotalNumberOfOpenRestaurants() {
+        return restaurantRepository.getAllRestaurants().stream()
+                .filter(Restaurant::isOpen)
+                .count();
+    }
+    public int getTotalNumberOfCustomers(){
+        return customerRepository.getAllCustomers().size();
+    }
+    public int getTotalNumberOfRiders(){
+        return riderRepository.getAllRiders().size();
+    }
+    public Long getNumberOfAvailableRiders() {
+        return riderRepository.getAllRiders().stream()
+                .filter(Rider::isAvailable)
+                .count();
+    }
 
+    public int getTotalNumberOfOrders() {
+        return  orderRepository.getAllOrders().size();
+    }
 }
