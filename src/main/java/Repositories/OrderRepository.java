@@ -4,14 +4,12 @@ package Repositories;
 import Domain.LoyaltyTier;
 import Domain.Order;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class OrderRepository {
     private final HashMap<String, Order> orders =new HashMap<>();
-    private final Comparator<Order> priorityQueueComparator=Comparator.comparing((Order o)->o.getCustomer().getLoyaltyTier()==LoyaltyTier.Gold)
+    private final Comparator<Order> priorityQueueComparator=Comparator.
+            comparing((Order o)->o.getCustomer().getLoyaltyTier()==LoyaltyTier.Gold)
             .reversed()
             .thenComparing(Order::getPlacedAt);
     private final PriorityQueue<Order> readyOrders=new PriorityQueue<>(priorityQueueComparator);
@@ -38,5 +36,13 @@ public class OrderRepository {
         if(order!=null) {
             readyOrders.remove(order);
         }
+    }
+    public List<Order> getAllReadyOrders(){
+        List<Order> orders = new ArrayList<>();
+        PriorityQueue<Order> copy = new PriorityQueue<>(readyOrders);
+        while (!copy.isEmpty()) {
+            orders.add(copy.poll());
+        }
+        return List.copyOf(orders);
     }
 }

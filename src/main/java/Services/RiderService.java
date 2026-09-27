@@ -6,6 +6,7 @@ import Exceptions.RiderBusyException;
 import Repositories.RiderRepository;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 public class RiderService {
     private final RiderRepository riderRepository;
@@ -17,6 +18,7 @@ public class RiderService {
         this.orderService = orderService;
         this.reportService = reportService;
     }
+
 
     public void removeRider(String riderId){
         Rider rider=riderRepository.findById(riderId);
@@ -59,7 +61,7 @@ public class RiderService {
         Order order=rider.getActiveOrder();
         order.markDelivered();
         rider.completeDelivery();
-        orderService.dispatchNextReadyOrder(rider);
+        orderService.dispatchNextReadyOrder();
     }
     public void markPickedUp(String riderId){
         Rider rider=getRider(riderId);
@@ -89,11 +91,11 @@ public class RiderService {
         Rider rider=getRider(riderId);
         if(rider.isAvailable()){
             System.out.println("Already available");
-            orderService.dispatchNextReadyOrder(rider);
+            orderService.dispatchNextReadyOrder();
             return;
         }
         rider.updateAvailabilityStatus(true);
-        orderService.dispatchNextReadyOrder(rider);
+        orderService.dispatchNextReadyOrder();
         System.out.println("Rider: "+riderId+" is now available.");
     }
 

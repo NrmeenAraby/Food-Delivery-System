@@ -66,20 +66,14 @@ public class RestaurantService {
        RestaurantFilter restaurantFilter=restaurant->true;
 
        if(searchCriteria.getDistrict()!=null){
-           restaurantFilter=restaurantFilter.and(
-                   r-> r.getDistrict().equalsIgnoreCase(searchCriteria.getDistrict())
-           );
+           restaurantFilter=restaurantFilter.and(r-> r.getDistrict().equalsIgnoreCase(searchCriteria.getDistrict()));
        }
 
        if(searchCriteria.getCuisineCategory()!=null){
-          restaurantFilter= restaurantFilter.and(
-                   r->r.getCuisineCategories().contains(searchCriteria.getCuisineCategory())
-           );
+          restaurantFilter= restaurantFilter.and(r->r.getCuisineCategories().contains(searchCriteria.getCuisineCategory()));
        }
        if(searchCriteria.getMinimumRating()!=null){
-           restaurantFilter=restaurantFilter.and(
-                   r->r.getAvgRating()>=searchCriteria.getMinimumRating()
-           );
+           restaurantFilter=restaurantFilter.and(r->r.getAvgRating()>=searchCriteria.getMinimumRating());
        }
 
        if(searchCriteria.getPriceCeiling()!=null){

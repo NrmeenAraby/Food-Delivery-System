@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -36,26 +37,22 @@ public class OrderService {
     public int getTotalNumberOfOrders(){
         return orderRepository.getAllOrders().size();
     }
-    public boolean dispatchNextReadyOrder(Rider rider){
-        List<Order> temp=new ArrayList<>();
-        while(true){
-            Order order=orderRepository.removeNextReadyOrder();
-            if(order==null)
-                break;
-            if(rider.canHandleOrder(order)){
-                rider.assignOrder(order);
-                order.assignRider(rider.getId());
-
-                temp.forEach(orderRepository::addReadyOrder);
-
-                return true;
+    public void dispatchNextReadyOrder(){
+        List<Order> readyOrders=orderRepository.getAllReadyOrders();
+        for(Order order:readyOrders){
+            Optional<Rider> rider=findEligibleAvailableRider(order);
+            if(rider.isPresent()){
+                rider.get().assignOrder(order);
+                order.assignRider(rider.get().getId());
+                orderRepository.removeReadyOrder(order.getId());
             }
-            temp.add(order);
         }
-        temp.forEach(orderRepository::addReadyOrder);
-        return false;
     }
-
+    private Optional<Rider> findEligibleAvailableRider(Order order) {
+        return riderRepository.getAllRiders().stream()
+                .filter(rider -> rider.canHandleOrder(order))
+                .findFirst();
+    }
     public List<Order> viewTodayOrders(String restaurantId) {
         LocalDate today = LocalDate.now();
 
@@ -188,7 +185,7 @@ public class OrderService {
         }
         order.getEventPublisher().subscribe(new CustomerNotificationListener());
         order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
-        order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository));
+        order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository,this));
         order.getEventPublisher().subscribe(new RiderDashboardListener(PlatformConfig.getInstance(),riderRepository));
         order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderRepository.addOrder(order);
