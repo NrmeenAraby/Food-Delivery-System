@@ -1,8 +1,8 @@
 # Food Delivery System 
 
-**Food Delivery System** is a Java-based food delivery platform built as a step between learning core Java and moving into framework-based development.
+**Food Delivery System** is a Java-based backend that models a full delivery platform: restaurants and menus, customer orders, rider dispatch, and order lifecycle management from placement through delivery or cancellation — built as a step between learning core Java and moving into framework-based development.
 
-The goal was to take Java beyond isolated exercises and build a **non-trivial, backend-oriented system** using Java itself — focusing on domain modeling, business logic, architecture, extensibility, and design patterns before introducing frameworks such as Spring.
+The goal was to take Java beyond isolated exercises and build a non-trivial, backend-oriented system using Java itself — focusing on domain modeling, business logic, architecture, extensibility, and design patterns before introducing frameworks such as Spring.
 
 The console is intentionally a **thin interface**. The main focus of the project is the system underneath it.
 
@@ -27,6 +27,7 @@ A major focus of the project was making the system open to extension without con
 
 ##  Engineering Highlights
 
+* **Order lifecycle management** — PLACED → ACCEPTED → PREPARING → READY → ASSIGNED → OUT_FOR_DELIVERY → DELIVERED, with CANCELLED reachable from any state before OUT_FOR_DELIVERY, driving an event system for notifications, audit logging, dispatch, and stats
 * **Strategy Pattern** — promotions & rider dispatching
 * **Builder Pattern** — order construction
 * **Factory** — menu item creation
