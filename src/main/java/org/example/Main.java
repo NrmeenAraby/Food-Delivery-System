@@ -2,6 +2,7 @@ package org.example;
 
 import Consoles.*;
 import Domain.AuditLog;
+import Domain.RiderDashBoard;
 import Repositories.*;
 import Services.*;
 import Utils.InputHelper;
@@ -18,11 +19,12 @@ public class Main {
         PromotionRepository promotionRepository=new PromotionRepository();
         RestaurantRepository restaurantRepository=new RestaurantRepository();
         RiderRepository riderRepository=new RiderRepository();
+        RiderDashBoard riderDashBoard=new RiderDashBoard();
 
         //services
         CustomerService customerService=new CustomerService(customerRepository,orderRepository);
         MenuItemService menuItemService=new MenuItemService(menuItemRepository);
-        OrderService orderService=new OrderService(orderRepository,auditLog,riderRepository,restaurantRepository);
+        OrderService orderService=new OrderService(orderRepository,auditLog,riderRepository,restaurantRepository,riderDashBoard);
         PromotionService promotionService=new PromotionService(promotionRepository);
         RestaurantService restaurantService=new RestaurantService(restaurantRepository,orderRepository);
         ReportService reportService=new ReportService(orderRepository,restaurantRepository,riderRepository,

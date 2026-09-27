@@ -11,9 +11,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Order {
-    private static int nextId = 1;
+    private static AtomicInteger nextId = new AtomicInteger(1);
     private final String id;
     private Customer customer;
     private String restaurantId;
@@ -31,7 +32,7 @@ public class Order {
     private boolean paid;
 
     public Order(Customer customer, String restaurantId,Address deliveryAddress,List<OrderLine>orderLines,Promotion promotion, BigDecimal distanceKm) {
-        id="O-"+Integer.toString(nextId++);
+        id="O-"+nextId.getAndIncrement();
         this.customer = customer;
         this.restaurantId = restaurantId;
         this.deliveryAddress = deliveryAddress;
@@ -75,17 +76,6 @@ public class Order {
         }
 
         this.promotion = promotion;
-    }
-    public void addLineItem(MenuItem item, BigDecimal quantity){
-        for(int idx=0;idx<lineItems.size();idx++){
-            OrderLine line=lineItems.get(idx);
-            if(line.getMenuItem().equals(item)){
-                BigDecimal newQuantity=line.getQuantity().add(quantity);
-                lineItems.set(idx,new OrderLine(item,newQuantity));
-                return;
-            }
-        }
-        lineItems.add(new OrderLine(item,quantity));
     }
     public void changeStatus(OrderStatus newStatus){
         if(!isValidTransition(newStatus)){
@@ -240,7 +230,7 @@ public class Order {
                 " | Placed at: " + placedAt +
                 "\n | Assigned at: " + assignedAt +
                 " | Status: " + orderStatus +
-                " | Total: " + calculatePrice().total() + " EGP" +
+                " | Total: " + finalPrice.total() + " EGP" +
                 " | paid: " + (isPaid()?"Yes":"No") +
                 " | Distance: " + distanceKm + " km";
     }

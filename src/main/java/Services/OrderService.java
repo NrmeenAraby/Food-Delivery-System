@@ -3,17 +3,12 @@ package Services;
 import Builders.OrderBuilder;
 import Domain.*;
 import Exceptions.*;
-import Repositories.CustomerRepository;
 import Repositories.OrderRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import OrderStatusObserver.subscribers.*;
 import Repositories.RestaurantRepository;
@@ -25,14 +20,14 @@ public class OrderService {
     private final AuditLog auditLog;
     private final RiderRepository riderRepository;
     private final RestaurantRepository restaurantRepository;
-
-
+    private final RiderDashBoard riderDashBoard;
     public OrderService(OrderRepository orderRepository, AuditLog auditLog, RiderRepository riderRepository,
-                      RestaurantRepository restaurantRepository) {
+                      RestaurantRepository restaurantRepository,RiderDashBoard riderDashBoard) {
         this.orderRepository = orderRepository;
         this.auditLog=auditLog;
         this.riderRepository = riderRepository;
         this.restaurantRepository = restaurantRepository;
+        this.riderDashBoard=riderDashBoard;
     }
     public int getTotalNumberOfOrders(){
         return orderRepository.getAllOrders().size();
@@ -186,7 +181,7 @@ public class OrderService {
         order.getEventPublisher().subscribe(new CustomerNotificationListener());
         order.getEventPublisher().subscribe(new AuditLogListener(auditLog));
         order.getEventPublisher().subscribe(new ReadyOrderListener(orderRepository,this));
-        order.getEventPublisher().subscribe(new RiderDashboardListener(PlatformConfig.getInstance(),riderRepository));
+        order.getEventPublisher().subscribe(new RiderDashboardListener(riderRepository, riderDashBoard));
         order.getEventPublisher().subscribe(new StatisticsListener(riderRepository,restaurantRepository));
         orderRepository.addOrder(order);
         customer.incrementOrderCount();

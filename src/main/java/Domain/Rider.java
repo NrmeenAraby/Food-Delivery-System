@@ -7,9 +7,10 @@ import Factories.DispatchStrategyFactory;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Rider {
-    private static int nextId = 1;
+    private static AtomicInteger nextId = new AtomicInteger(1);
     private final String id;
     private String name;
     private VehicleType vehicleType;
@@ -27,7 +28,7 @@ public class Rider {
         if(district.isBlank()){
             throw new PlatformException("District cant be empty");
         }
-        id="RD-"+Integer.toString(nextId++);
+        id="RD-"+nextId.getAndIncrement();
         this.name = name;
         this.vehicleType = vehicleType;
         this.district = district;
